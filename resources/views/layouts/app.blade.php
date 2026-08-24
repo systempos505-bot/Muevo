@@ -20,7 +20,7 @@
         </div>
 
         <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-            @foreach ($this->navigation() as $item)
+            @foreach (\App\Support\Navigation::items() as $item)
                 <a href="{{ $item['url'] }}" wire:navigate
                    @class([
                        'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition',
@@ -45,22 +45,23 @@
 
     <div class="flex-1 lg:pl-60 flex flex-col min-h-screen">
 
-        {{-- Barra superior: en celular muestra el titulo, en escritorio el contexto --}}
-        <header class="sticky top-0 z-20 bg-white border-b border-slate-200">
-            <div class="flex items-center justify-between h-16 px-4 sm:px-6">
-                <div class="min-w-0">
-                    <h1 class="text-lg font-semibold truncate">{{ $header ?? '' }}</h1>
-                    @isset($subheader)
-                        <p class="text-xs text-slate-500 truncate">{{ $subheader }}</p>
-                    @endisset
+        {{-- Barra superior: solo en celular, donde no hay menu lateral --}}
+        <header class="lg:hidden sticky top-0 z-20 bg-white border-b border-slate-200">
+            <div class="flex items-center justify-between h-14 px-4">
+                <div class="flex items-center gap-2 min-w-0">
+                    <span class="grid place-items-center w-7 h-7 rounded-lg bg-indigo-500 text-white text-sm font-bold">M</span>
+                    <span class="font-medium text-slate-900 truncate">
+                        {{ auth()->user()->tenant->name }}
+                    </span>
                 </div>
-                @isset($actions)
-                    <div class="flex items-center gap-2 shrink-0">{{ $actions }}</div>
-                @endisset
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button class="text-xs text-slate-500 hover:text-slate-900 transition">Salir</button>
+                </form>
             </div>
         </header>
 
-        {{-- pb-20 deja aire para que la barra inferior no tape el contenido --}}
+        {{-- pb-24 deja aire para que la barra inferior no tape el contenido --}}
         <main class="flex-1 p-4 sm:p-6 pb-24 lg:pb-6">
             {{ $slot }}
         </main>
@@ -69,11 +70,13 @@
     {{-- Barra inferior: solo en celular y tablet --}}
     <nav class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-slate-200
                 pb-[env(safe-area-inset-bottom)]">
-        <div class="grid grid-cols-5">
-            @foreach ($this->navigation(primary: true) as $item)
+        {{-- Reparto flexible: los modulos aun no construidos no dejan
+             huecos ni empujan los botones hacia un lado. --}}
+        <div class="flex">
+            @foreach (\App\Support\Navigation::items(primary: true) as $item)
                 <a href="{{ $item['url'] }}" wire:navigate
                    @class([
-                       'flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition',
+                       'flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition',
                        'text-indigo-600' => $item['active'],
                        'text-slate-500' => ! $item['active'],
                    ])>

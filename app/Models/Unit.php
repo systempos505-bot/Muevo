@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Unidad de medida del catalogo del negocio: Unidad, Caja, Docena, Kg.
@@ -20,6 +21,12 @@ class Unit extends Model
     protected function casts(): array
     {
         return ['allows_decimals' => 'boolean'];
+    }
+
+    /** Productos que usan esta unidad como su unidad base. */
+    public function products(): HasMany
+    {
+        return $this->hasMany(Product::class, 'base_unit_id');
     }
 
     public function scopeActive($query)

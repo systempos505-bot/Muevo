@@ -192,13 +192,7 @@ class Form extends Page
                     'price_list_id' => $list->id,
                     'name' => $list->name,
                     'price' => (float) ($price?->price ?? 0),
-                    'margin' => $price
-                        ? Pricing::margin($product->cost, Pricing::splitTax(
-                            (float) $price->price,
-                            $product->taxRate(),
-                            $this->taxMode,
-                        )['net'])
-                        : null,
+                    'margin' => $this->marginFor((float) ($price?->price ?? 0)),
                 ];
             })
             ->all();
@@ -316,15 +310,30 @@ class Form extends Page
             return;
         }
 
-        $net = Pricing::splitTax((float) $value, $this->taxRate, $this->taxMode)['net'];
-        $this->priceRows[(int) $index]['margin'] = Pricing::margin($this->cost, $net);
+        $this->priceRows[(int) $index]['margin'] = $this->marginFor((float) $value);
+    }
+
+    /**
+     * Margen de un precio, o null si aun no hay precio capturado.
+     *
+     * Un precio en cero da -100% de margen, que es correcto pero se lee
+     * como un error; mientras la lista este vacia se muestra un guion.
+     */
+    protected function marginFor(float $price): ?float
+    {
+        if ($price <= 0) {
+            return null;
+        }
+
+        $net = Pricing::splitTax($price, $this->taxRate, $this->taxMode)['net'];
+
+        return Pricing::margin($this->cost, $net);
     }
 
     protected function refreshMargins(): void
     {
         foreach ($this->priceRows as $index => $row) {
-            $net = Pricing::splitTax((float) $row['price'], $this->taxRate, $this->taxMode)['net'];
-            $this->priceRows[$index]['margin'] = Pricing::margin($this->cost, $net);
+            $this->priceRows[$index]['margin'] = $this->marginFor((float) $row['price']);
         }
     }
 

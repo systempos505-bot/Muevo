@@ -35,6 +35,11 @@ class Index extends Page
     #[Url(except: 'all')]
     public string $stockFilter = 'all';
 
+    public function mount(): void
+    {
+        abort_unless(auth()->user()->can('products.view'), 403);
+    }
+
     /** Al cambiar un filtro hay que volver a la primera pagina. */
     public function updated(string $property): void
     {

@@ -1,16 +1,16 @@
 <div>
-    <x-slot:header>{{ $productId ? 'Editar producto' : 'Nuevo producto' }}</x-slot:header>
-    <x-slot:subheader>{{ $name ?: 'Sin nombre' }}</x-slot:subheader>
-
-    <x-slot:actions>
-        <a href="{{ route('products') }}" wire:navigate>
-            <x-button variant="secondary" size="sm">Cancelar</x-button>
-        </a>
-        <x-button size="sm" wire:click="save" wire:loading.attr="disabled">
-            <span wire:loading.remove wire:target="save">Guardar</span>
-            <span wire:loading wire:target="save">Guardando...</span>
-        </x-button>
-    </x-slot:actions>
+    <x-page-header :title="$productId ? 'Editar producto' : 'Nuevo producto'"
+                   :subtitle="$name ?: 'Sin nombre'">
+        <x-slot:actions>
+            <a href="{{ route('products') }}" wire:navigate>
+                <x-button variant="secondary" size="sm">Cancelar</x-button>
+            </a>
+            <x-button size="sm" wire:click="save" wire:loading.attr="disabled">
+                <span wire:loading.remove wire:target="save">Guardar</span>
+                <span wire:loading wire:target="save">Guardando...</span>
+            </x-button>
+        </x-slot:actions>
+    </x-page-header>
 
     @php
         $tabs = [

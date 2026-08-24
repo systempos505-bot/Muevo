@@ -53,19 +53,36 @@ class User extends Authenticatable
     }
 
     /**
-     * Si el usuario puede hacer algo.
+     * Si el usuario tiene un permiso.
+     *
      * El comodin '*' del administrador abre todo, pero una excepcion
-     * explicita del usuario sigue mandando sobre el.
+     * explicita sobre el usuario sigue mandando sobre el.
      */
-    public function can($abilities, $arguments = []): bool
+    public function hasPermission(string $ability): bool
     {
-        $action = is_string($abilities) ? $abilities : (string) $abilities;
         $permissions = $this->permissions();
 
-        if (array_key_exists($action, $permissions)) {
-            return (bool) $permissions[$action];
+        if (array_key_exists($ability, $permissions)) {
+            return (bool) $permissions[$ability];
         }
 
         return ($permissions['*'] ?? false) === true;
+    }
+
+    /**
+     * Se sobreescribe para que `$user->can('products.edit')` consulte los
+     * permisos del rol.
+     *
+     * La directiva `@can` de Blade no pasa por aqui sino por el Gate, que
+     * se conecta a `hasPermission` en AppServiceProvider. Ambos caminos
+     * tienen que dar la misma respuesta.
+     */
+    public function can($abilities, $arguments = []): bool
+    {
+        if (is_string($abilities)) {
+            return $this->hasPermission($abilities);
+        }
+
+        return parent::can($abilities, $arguments);
     }
 }

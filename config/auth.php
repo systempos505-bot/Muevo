@@ -63,7 +63,9 @@ return [
 
     'providers' => [
         'users' => [
-            'driver' => 'eloquent',
+            // Proveedor propio: ignora el filtro de empresa al buscar al
+            // usuario que se autentica. Ver App\Auth\TenantAwareUserProvider.
+            'driver' => 'tenant_aware',
             'model' => env('AUTH_MODEL', User::class),
         ],
 

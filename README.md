@@ -14,7 +14,10 @@ Pensado para farmacias, tiendas de ropa, zapaterías, ferreterías y supermercad
 | Cimientos (empresas, sucursales, cajas, roles, usuarios) | ✅ Listo |
 | Configuración (monedas, impuestos, numeración) | ✅ Esquema listo |
 | Catálogo de productos | ✅ Listo |
-| Inventario (existencias, kardex, lotes, series) | ✅ Esquema listo |
+| Categorías, marcas y unidades | ✅ Listo |
+| Listas de precios | ✅ Listo |
+| Inventario: existencias, kardex y ajustes | ✅ Listo |
+| Inventario: lotes, vencimientos y series | ✅ Esquema listo |
 | Clientes y proveedores | ✅ Esquema listo |
 | Punto de venta | ⬜ Pendiente |
 | Compras | ⬜ Pendiente |
@@ -68,17 +71,23 @@ Corren contra SQLite en memoria, así que no tocan tu base de trabajo.
 ```
 app/
   Livewire/           Pantallas (cada una es un componente)
-    Page.php          Base con el menú y los avisos
+    Page.php          Base con los avisos en pantalla
     Auth/             Registro e inicio de sesión
     Products/         Listado y formulario de productos
+    Catalog/          Categorías, marcas, unidades y listas de precios
+    Inventory/        Existencias, ajustes y kardex
   Models/             Modelos Eloquent
     Concerns/
       BelongsToTenant.php   Aísla los datos por empresa
   Services/
     Pricing.php             Impuesto, margen y precio sugerido
+    InventoryManager.php    Único punto por el que se mueve el stock
     TenantProvisioner.php   Deja lista una empresa nueva
   Support/
     Tenancy.php             Empresa activa durante la petición
+    Navigation.php          Menú, filtrado por permisos
+  Auth/
+    TenantAwareUserProvider.php   Busca al usuario que inicia sesión
 database/migrations/  Esquema completo
 resources/views/
   layouts/            app (con sesión) y guest (sin sesión)
@@ -86,7 +95,8 @@ resources/views/
   livewire/           Vistas de cada pantalla
 tests/
   Unit/               Motor de precios
-  Feature/            Registro, productos y aislamiento entre empresas
+  Feature/            Registro, sesión, productos, catálogo, inventario
+                      y aislamiento entre empresas
 ```
 
 ---
@@ -123,3 +133,18 @@ después cómo se llegó a la existencia actual.
 lotes y vencimiento ya activados; una tienda de ropa, con variantes. Un solo
 motor por debajo, pero cada producto activa nada más lo que usa, para que el
 formulario no tenga cuarenta casillas.
+
+**Todo movimiento de inventario pasa por `InventoryManager`.** Actualizar la
+existencia y escribir el renglón del kardex tienen que ocurrir juntos o no
+ocurrir; si cada pantalla lo hiciera por su cuenta, tarde o temprano quedaría
+una cantidad sin explicación. La fila se bloquea mientras se actualiza, para
+que dos ajustes simultáneos no escriban saldos inconsistentes.
+
+**El costo promedio solo se mueve al entrar mercancía.** En una entrada el
+costo es lo que se está pagando ahora; en una salida, el promedio acumulado.
+Una salida no cambia lo que costó lo que ya estaba guardado.
+
+**Las cabeceras de pantalla van dentro del componente Livewire.** Si vivieran
+en el layout quedarían fuera de su elemento raíz y los botones con `wire:click`
+no harían nada. Es un error que no se ve en las pruebas de componente, porque
+esas llaman los métodos directamente.

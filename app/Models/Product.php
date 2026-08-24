@@ -16,6 +16,26 @@ class Product extends Model
 
     protected $guarded = ['id'];
 
+    /**
+     * Los mismos valores por defecto que tiene la tabla.
+     *
+     * Sin esto, un producto recien creado trae estos campos nulos hasta
+     * que se vuelve a leer de la base, y codigo que consulte track_stock
+     * enseguida se comportaria como si fuera un servicio.
+     */
+    protected $attributes = [
+        'type' => 'simple',
+        'cost' => 0,
+        'track_stock' => true,
+        'min_stock' => 0,
+        'track_lots' => false,
+        'track_expiry' => false,
+        'track_serials' => false,
+        'expiry_alert_days' => 30,
+        'expiry_block_days' => 0,
+        'status' => 'active',
+    ];
+
     protected function casts(): array
     {
         return [

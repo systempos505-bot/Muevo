@@ -1,14 +1,13 @@
 <div>
-    <x-slot:header>Productos</x-slot:header>
-    <x-slot:subheader>{{ $products->total() }} en el catalogo</x-slot:subheader>
-
-    <x-slot:actions>
-        @if (auth()->user()->can('products.create'))
-            <a href="{{ route('products.create') }}" wire:navigate>
-                <x-button>+ Nuevo</x-button>
-            </a>
-        @endif
-    </x-slot:actions>
+    <x-page-header title="Productos" :subtitle="$products->total() . ' en el catalogo'">
+        <x-slot:actions>
+            @if (auth()->user()->can('products.create'))
+                <a href="{{ route('products.create') }}" wire:navigate>
+                    <x-button size="sm">+ Nuevo</x-button>
+                </a>
+            @endif
+        </x-slot:actions>
+    </x-page-header>
 
     {{-- Filtros. En celular se apilan; en escritorio van en una fila. --}}
     <div class="flex flex-col sm:flex-row gap-3 mb-4">

@@ -1,6 +1,6 @@
 <div>
-    <x-slot:header>Hola, {{ str(auth()->user()->name)->before(' ') }}</x-slot:header>
-    <x-slot:subheader>{{ auth()->user()->tenant->name }}</x-slot:subheader>
+    <x-page-header :title="'Hola, ' . str(auth()->user()->name)->before(' ')"
+                   :subtitle="auth()->user()->tenant->name" />
 
     {{-- Indicadores. En celular van de dos en dos. --}}
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">

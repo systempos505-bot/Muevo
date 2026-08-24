@@ -70,9 +70,16 @@ class ProductLot extends Model
         return $this->expiry_date->lte(now()->addDays($blockDays));
     }
 
+    /**
+     * Las columnas se califican con el nombre de la tabla porque este
+     * scope se usa junto a un join con `products`, que tiene columnas
+     * `status` y `quantity` propias.
+     */
     public function scopeSellable($query)
     {
-        return $query->where('status', 'active')->where('quantity', '>', 0);
+        return $query
+            ->where($query->qualifyColumn('status'), 'active')
+            ->where($query->qualifyColumn('quantity'), '>', 0);
     }
 
     /**
