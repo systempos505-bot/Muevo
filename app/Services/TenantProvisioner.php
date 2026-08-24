@@ -140,7 +140,6 @@ class TenantProvisioner
                 'customers.view' => true,
                 'customers.create' => true,
                 'customers.edit' => true,
-                'quotes.create' => true,
                 'promotions.view' => true,
             ],
         ],

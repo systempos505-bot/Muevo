@@ -16,6 +16,17 @@ class User extends Authenticatable
 
     protected $hidden = ['password', 'pin', 'remember_token'];
 
+    /**
+     * Los mismos valores por defecto que tiene la tabla.
+     *
+     * Sin esto, un usuario recien creado trae el estado nulo hasta que se
+     * vuelve a leer de la base, y el middleware que saca a los usuarios
+     * apagados lo trataria como si lo estuviera.
+     */
+    protected $attributes = [
+        'status' => 'active',
+    ];
+
     protected function casts(): array
     {
         return [

@@ -13,6 +13,7 @@ Pensado para farmacias, tiendas de ropa, zapaterías, ferreterías y supermercad
 |---|---|
 | Cimientos (empresas, sucursales, cajas, roles, usuarios) | ✅ Listo |
 | Sucursales: alta, caja y series de folios | ✅ Listo |
+| Usuarios, roles y permisos | ✅ Listo |
 | Configuración (monedas, impuestos, numeración) | ✅ Esquema listo |
 | Catálogo de productos | ✅ Listo |
 | Categorías, marcas y unidades | ✅ Listo |
@@ -105,6 +106,7 @@ app/
     Reports.php             Consultas agregadas de los reportes
     TenantProvisioner.php   Deja lista una empresa nueva
   Support/
+    Permissions.php         Catalogo de permisos del sistema
     Tenancy.php             Empresa activa durante la petición
     Navigation.php          Menú, filtrado por permisos
   Auth/

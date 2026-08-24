@@ -39,6 +39,7 @@ class Navigation
             ['label' => 'Promociones', 'icon' => '✽', 'route' => 'promotions',        'match' => 'promotions', 'permission' => 'promotions.view', 'primary' => false],
             ['label' => 'Reportes',   'icon' => '◔', 'route' => 'reports',            'match' => 'reports',   'permission' => 'reports.view',   'primary' => true],
             ['label' => 'Sucursales', 'icon' => '⊟', 'route' => 'branches',           'match' => 'branches',  'permission' => 'settings.view',  'primary' => false],
+            ['label' => 'Usuarios',   'icon' => '☻', 'route' => 'users',              'match' => 'users',     'permission' => 'users.view',     'primary' => false],
         ];
     }
 

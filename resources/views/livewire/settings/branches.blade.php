@@ -8,6 +8,8 @@
         </x-slot:actions>
     </x-page-header>
 
+    @include('partials.settings-tabs')
+
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
         @foreach ($branches as $branch)
             <x-card wire:key="branch-{{ $branch->id }}"

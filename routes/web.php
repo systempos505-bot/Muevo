@@ -88,6 +88,8 @@ Route::middleware('auth')->group(function () {
 
     // --- Configuracion ---
     Route::get('/sucursales', Settings\Branches::class)->name('branches');
+    Route::get('/usuarios', Settings\Users::class)->name('users');
+    Route::get('/roles', Settings\Roles::class)->name('roles');
 
     // --- Traspasos entre sucursales ---
     Route::get('/traspasos', Transfers\Index::class)->name('transfers');
