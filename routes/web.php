@@ -9,6 +9,7 @@ use App\Livewire\Inventory;
 use App\Livewire\Partners;
 use App\Livewire\Pos;
 use App\Livewire\Products;
+use App\Livewire\Promotions;
 use App\Livewire\Purchases;
 use App\Livewire\Reports;
 use App\Livewire\Sales;
@@ -67,6 +68,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/cuentas', Finance\Accounts::class)->name('accounts');
     Route::get('/cuentas/{accountId}', Finance\AccountShow::class)->name('accounts.show');
     Route::get('/gastos', Finance\Expenses::class)->name('expenses');
+
+    // --- Promociones ---
+    Route::get('/promociones', Promotions\Index::class)->name('promotions');
 
     // --- Reportes ---
     Route::get('/reportes', Reports\Index::class)->name('reports');

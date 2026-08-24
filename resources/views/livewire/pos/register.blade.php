@@ -143,10 +143,41 @@
                                                text-slate-600 hover:bg-slate-50">+</button>
                             </div>
 
-                            <p class="font-semibold text-slate-900 tabular-nums">
-                                {{ $currency?->symbol }}{{ number_format($line['total'], 2) }}
-                            </p>
+                            @php $promo = $this->linePromotions[$key] ?? null; @endphp
+
+                            <div class="text-right">
+                                <p @class([
+                                    'font-semibold tabular-nums',
+                                    'text-slate-400 line-through text-sm' => $promo,
+                                    'text-slate-900' => ! $promo,
+                                ])>
+                                    {{ $currency?->symbol }}{{ number_format($line['total'], 2) }}
+                                </p>
+                                @if ($promo)
+                                    <p class="font-semibold text-slate-900 tabular-nums">
+                                        {{ $currency?->symbol }}{{ number_format(max(0, $line['total'] - $promo['discount']), 2) }}
+                                    </p>
+                                @endif
+                            </div>
                         </div>
+
+                        {{-- La promocion se anuncia en la linea: el cliente
+                             tiene que ver el ahorro, no solo un total menor. --}}
+                        @if ($promo)
+                            <div class="flex flex-wrap items-center gap-1.5 mt-2">
+                                @foreach ($promo['labels'] as $label)
+                                    <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium">
+                                        {{ $label }}
+                                    </span>
+                                @endforeach
+                                <span class="text-xs text-emerald-700 tabular-nums">
+                                    ahorra {{ $currency?->symbol }}{{ number_format($promo['discount'], 2) }}
+                                    @if ($promo['free'] > 0)
+                                        · {{ rtrim(rtrim(number_format($promo['free'], 3), '0'), '.') }} gratis
+                                    @endif
+                                </span>
+                            </div>
+                        @endif
 
                         @can('sales.discount')
                             <div class="flex items-center gap-2 mt-2">
@@ -174,12 +205,23 @@
                             {{ $currency?->symbol }}{{ number_format($this->totals['subtotal'], 2) }}
                         </span>
                     </div>
-                    <div class="flex justify-between text-sm text-emerald-700">
-                        <span>Descuento</span>
-                        <span class="tabular-nums">
-                            −{{ $currency?->symbol }}{{ number_format($this->totals['discount'], 2) }}
-                        </span>
-                    </div>
+                    @if ($this->totals['promotion'] > 0)
+                        <div class="flex justify-between text-sm text-emerald-700">
+                            <span>Promociones</span>
+                            <span class="tabular-nums">
+                                −{{ $currency?->symbol }}{{ number_format($this->totals['promotion'], 2) }}
+                            </span>
+                        </div>
+                    @endif
+
+                    @if ($this->totals['discount'] - $this->totals['promotion'] > 0)
+                        <div class="flex justify-between text-sm text-emerald-700">
+                            <span>Descuento</span>
+                            <span class="tabular-nums">
+                                −{{ $currency?->symbol }}{{ number_format($this->totals['discount'] - $this->totals['promotion'], 2) }}
+                            </span>
+                        </div>
+                    @endif
                 @endif
 
                 @if ($this->totals['tax'] > 0)

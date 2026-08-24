@@ -10,12 +10,15 @@ use App\Models\PaymentMethod;
 use App\Models\PriceList;
 use App\Models\Product;
 use App\Models\ProductBarcode;
+use App\Models\Promotion;
 use App\Models\Sale;
 use App\Models\Shift;
 use App\Models\Terminal;
 use App\Services\CashRegister;
 use App\Services\Pricing;
+use App\Services\PromotionEngine;
 use App\Services\SaleRegistrar;
+use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use RuntimeException;
@@ -364,6 +367,90 @@ class Register extends Page
     }
 
     // =========================================================
+    // Promociones
+    // =========================================================
+
+    /**
+     * Promociones vigentes para esta caja, esta lista y este cliente.
+     *
+     * @return Collection<int, Promotion>
+     */
+    #[Computed]
+    public function activePromotions(): Collection
+    {
+        return app(PromotionEngine::class)->active(
+            branchId: auth()->user()->branch_id ?? Branch::active()->value('id'),
+            priceListId: $this->priceListId,
+            customerTypeId: $this->customerId
+                ? Customer::whereKey($this->customerId)->value('customer_type_id')
+                : null,
+        );
+    }
+
+    /**
+     * Descuento de promocion que le toca a cada linea del carrito.
+     *
+     * Se calcula con el mismo servicio que usa el registro de la venta,
+     * para que lo que el cajero le dice al cliente sea exactamente lo que
+     * se va a cobrar. Lo que manda es el calculo del servidor al cobrar:
+     * esto es solo lo que se ve.
+     *
+     * @return array<string, array{discount: float, free: float, labels: array<int, string>}>
+     */
+    #[Computed]
+    public function linePromotions(): array
+    {
+        $active = $this->activePromotions;
+
+        if ($active->isEmpty() || $this->cart === []) {
+            return [];
+        }
+
+        $engine = app(PromotionEngine::class);
+        $decimals = auth()->user()->tenant->price_decimals;
+
+        $products = Product::whereIn('id', array_column($this->cart, 'product_id'))
+            ->get()
+            ->keyBy('id');
+
+        $result = [];
+
+        foreach ($this->cart as $key => $line) {
+            $product = $products->get($line['product_id']);
+
+            if ($product === null) {
+                continue;
+            }
+
+            $applied = $engine->forLine(
+                product: $product,
+                quantity: (float) $line['quantity'],
+                unitPrice: (float) $line['unit_price'],
+                promotions: $active,
+                decimals: $decimals,
+            );
+
+            if ($applied['discount'] <= 0) {
+                continue;
+            }
+
+            $result[$key] = [
+                'discount' => $applied['discount'],
+                'free' => $applied['free_quantity'],
+                'labels' => array_column($applied['applied'], 'label'),
+            ];
+        }
+
+        return $result;
+    }
+
+    /** Lo que la promocion le ahorra a una linea. */
+    public function promotionDiscount(string $key): float
+    {
+        return (float) ($this->linePromotions[$key]['discount'] ?? 0);
+    }
+
+    // =========================================================
     // Totales
     // =========================================================
 
@@ -373,23 +460,32 @@ class Register extends Page
         $decimals = auth()->user()->tenant->price_decimals;
         $mode = auth()->user()->tenant->taxMode();
 
+        $promotions = $this->linePromotions;
+
         $subtotal = 0;
         $discount = 0;
+        $promotion = 0;
         $tax = 0;
         $total = 0;
 
-        foreach ($this->cart as $line) {
+        foreach ($this->cart as $key => $line) {
+            $promoDiscount = (float) ($promotions[$key]['discount'] ?? 0);
+
             $lineTotals = Pricing::line(
                 quantity: (float) $line['quantity'],
                 unitPrice: (float) $line['unit_price'],
                 taxRate: (float) $line['tax_rate'],
-                discount: (float) ($line['discount'] ?? 0),
+                // El descuento a mano y el de promocion se suman igual que
+                // al registrar la venta: lo que se ve aqui es lo que se
+                // va a cobrar.
+                discount: (float) ($line['discount'] ?? 0) + $promoDiscount,
                 mode: $mode,
                 decimals: $decimals,
             );
 
             $subtotal += $lineTotals['subtotal'];
             $discount += $lineTotals['discount'];
+            $promotion += min($promoDiscount, $lineTotals['discount']);
             $tax += $lineTotals['tax'];
             $total += $lineTotals['gross'];
         }
@@ -399,6 +495,7 @@ class Register extends Page
             'units' => Pricing::round(array_sum(array_column($this->cart, 'quantity')), 3),
             'subtotal' => Pricing::round($subtotal, $decimals),
             'discount' => Pricing::round($discount, $decimals),
+            'promotion' => Pricing::round($promotion, $decimals),
             'tax' => Pricing::round($tax, $decimals),
             'total' => Pricing::round($total, $decimals),
         ];

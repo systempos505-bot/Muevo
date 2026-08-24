@@ -8,9 +8,11 @@ use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\SaleItemPromotion;
 use App\Models\SalePayment;
 use App\Models\Shift;
 use App\Support\Tenancy;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
@@ -27,6 +29,7 @@ class SaleRegistrar
     public function __construct(
         protected InventoryManager $inventory,
         protected Treasury $treasury,
+        protected PromotionEngine $promotions,
     ) {}
 
     /**
@@ -59,7 +62,18 @@ class SaleRegistrar
             $taxMode = $tenant->taxMode();
             $decimals = $tenant->price_decimals;
 
-            $prepared = $this->prepareLines($lines, $taxMode, $decimals);
+            // Las promociones se calculan aqui y no se reciben de quien
+            // llama: un descuento que viene de afuera es un descuento que
+            // se puede inventar.
+            $active = $this->promotions->active(
+                branchId: $shift->branch_id,
+                priceListId: $priceListId,
+                customerTypeId: $customerId
+                    ? Customer::whereKey($customerId)->value('customer_type_id')
+                    : null,
+            );
+
+            $prepared = $this->prepareLines($lines, $taxMode, $decimals, $active);
             $totals = $this->sumLines($prepared, $decimals);
 
             $paymentRows = $this->preparePayments($payments, $decimals);
@@ -96,7 +110,7 @@ class SaleRegistrar
             ]);
 
             foreach ($prepared as $position => $line) {
-                SaleItem::create([
+                $item = SaleItem::create([
                     'sale_id' => $sale->id,
                     'product_id' => $line['product']->id,
                     'variant_id' => $line['variant_id'],
@@ -117,6 +131,7 @@ class SaleRegistrar
                     'position' => $position,
                 ]);
 
+                $this->recordPromotions($item, $line['promotions']);
                 $this->deductStock($sale, $line);
             }
 
@@ -167,8 +182,13 @@ class SaleRegistrar
      * Calcula cada linea y trae consigo el producto, para no volver a
      * consultarlo al descontar el inventario.
      */
-    protected function prepareLines(array $lines, string $taxMode, int $decimals): array
-    {
+    protected function prepareLines(
+        array $lines,
+        string $taxMode,
+        int $decimals,
+        ?Collection $active = null,
+    ): array {
+        $active = $active ?? collect();
         $prepared = [];
 
         foreach ($lines as $line) {
@@ -191,12 +211,24 @@ class SaleRegistrar
             }
 
             $taxRate = $product->taxRate();
+            $unitPrice = (float) $line['unit_price'];
 
+            $promotion = $this->promotions->forLine(
+                product: $product,
+                quantity: $quantity,
+                unitPrice: $unitPrice,
+                promotions: $active,
+                decimals: $decimals,
+            );
+
+            // El descuento a mano y el de promocion se suman. Pricing::line
+            // topa el total al importe de la linea, asi que las dos cosas
+            // juntas no la pueden dejar en negativo.
             $totals = Pricing::line(
                 quantity: $quantity,
-                unitPrice: (float) $line['unit_price'],
+                unitPrice: $unitPrice,
                 taxRate: $taxRate,
-                discount: (float) ($line['discount'] ?? 0),
+                discount: (float) ($line['discount'] ?? 0) + $promotion['discount'],
                 mode: $taxMode,
                 decimals: $decimals,
             );
@@ -210,14 +242,37 @@ class SaleRegistrar
                 'quantity' => $quantity,
                 'unit_factor' => $factor,
                 'base_quantity' => Pricing::toBaseQuantity($quantity, $factor),
-                'unit_price' => (float) $line['unit_price'],
+                'unit_price' => $unitPrice,
                 'tax_rate' => $taxRate,
                 'unit_cost' => (float) $product->cost,
                 'totals' => $totals,
+                'promotions' => $promotion['applied'],
             ];
         }
 
         return $prepared;
+    }
+
+    /**
+     * Deja constancia de que promocion se aplico a la linea.
+     *
+     * El nombre se copia: renombrar o borrar la promocion despues no debe
+     * cambiar como se lee un ticket ya emitido. El contador de usos sube
+     * aqui, que es el unico lugar donde una promocion se usa de verdad.
+     */
+    protected function recordPromotions(SaleItem $item, array $applied): void
+    {
+        foreach ($applied as $row) {
+            SaleItemPromotion::create([
+                'sale_item_id' => $item->id,
+                'promotion_id' => $row['promotion']->id,
+                'label' => $row['label'],
+                'discount' => $row['discount'],
+                'free_quantity' => $row['free_quantity'],
+            ]);
+
+            $row['promotion']->increment('times_used');
+        }
     }
 
     protected function sumLines(array $prepared, int $decimals): array

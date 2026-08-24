@@ -124,6 +124,7 @@ class TenantProvisioner
                 'cash.open' => true,
                 'cash.close' => true,
                 'inventory.view' => true,
+                'promotions.view' => true,
             ],
         ],
         [
@@ -138,6 +139,7 @@ class TenantProvisioner
                 'customers.create' => true,
                 'customers.edit' => true,
                 'quotes.create' => true,
+                'promotions.view' => true,
             ],
         ],
         [

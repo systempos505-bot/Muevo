@@ -69,9 +69,23 @@
                             {{ $currency?->symbol }}{{ number_format($item->total, 2) }}
                         </span>
                     </div>
-                    @if ($item->discount > 0)
+                    {{-- La promocion se nombra en el ticket: el cliente
+                         tiene que poder ver por que pago menos. --}}
+                    @foreach ($item->promotions as $promotion)
                         <p class="text-xs text-emerald-700">
-                            Descuento −{{ $currency?->symbol }}{{ number_format($item->discount, 2) }}
+                            {{ $promotion->label }}
+                            −{{ $currency?->symbol }}{{ number_format($promotion->discount, 2) }}
+                            @if ($promotion->free_quantity > 0)
+                                ({{ rtrim(rtrim(number_format($promotion->free_quantity, 3), '0'), '.') }} gratis)
+                            @endif
+                        </p>
+                    @endforeach
+
+                    @php $manual = $item->discount - $item->promotions->sum('discount'); @endphp
+
+                    @if ($manual > 0)
+                        <p class="text-xs text-emerald-700">
+                            Descuento −{{ $currency?->symbol }}{{ number_format($manual, 2) }}
                         </p>
                     @endif
                 </div>

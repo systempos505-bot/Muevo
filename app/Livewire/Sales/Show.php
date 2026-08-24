@@ -27,7 +27,7 @@ class Show extends Page
     {
         abort_unless(auth()->user()->can('sales.view'), 403);
 
-        $this->sale = Sale::with(['items.product', 'payments', 'customer', 'user', 'branch', 'terminal'])
+        $this->sale = Sale::with(['items.product', 'items.promotions', 'payments', 'customer', 'user', 'branch', 'terminal'])
             ->findOrFail($saleId);
     }
 

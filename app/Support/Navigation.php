@@ -34,6 +34,7 @@ class Navigation
             ['label' => 'Proveedores', 'icon' => '☖', 'route' => 'suppliers',          'match' => 'suppliers', 'permission' => 'purchases.view', 'primary' => false],
             ['label' => 'Catalogo',   'icon' => '☰', 'route' => 'catalog.categories', 'match' => 'catalog',   'permission' => 'products.view',  'primary' => false],
             ['label' => 'Clientes',   'icon' => '☺', 'route' => 'customers',          'match' => 'customers', 'permission' => 'customers.view', 'primary' => false],
+            ['label' => 'Promociones', 'icon' => '✽', 'route' => 'promotions',        'match' => 'promotions', 'permission' => 'promotions.view', 'primary' => false],
             ['label' => 'Reportes',   'icon' => '◔', 'route' => 'reports',            'match' => 'reports',   'permission' => 'reports.view',   'primary' => true],
         ];
     }

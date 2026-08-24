@@ -6,6 +6,7 @@ use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Linea de una venta.
@@ -51,6 +52,12 @@ class SaleItem extends Model
     public function variant(): BelongsTo
     {
         return $this->belongsTo(ProductVariant::class, 'variant_id');
+    }
+
+    /** Promociones que se aplicaron a esta linea al venderla. */
+    public function promotions(): HasMany
+    {
+        return $this->hasMany(SaleItemPromotion::class);
     }
 
     /** Utilidad de la linea: lo que quedo despues del costo. */

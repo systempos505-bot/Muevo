@@ -65,6 +65,7 @@ it('carga todas las pantallas con sesion iniciada', function () {
         route('customers'),
         route('accounts'),
         route('expenses'),
+        route('promotions'),
         route('reports'),
         route('reports', ['tab' => 'ventas']),
         route('reports', ['tab' => 'productos']),
@@ -95,6 +96,7 @@ it('muestra los botones de accion a quien tiene el permiso', function () {
     $this->get(route('catalog.units'))->assertSee('+ Unidad');
     $this->get(route('catalog.price-lists'))->assertSee('+ Lista');
     $this->get(route('reports'))->assertSee('Exportar CSV');
+    $this->get(route('promotions'))->assertSee('+ Promocion');
 });
 
 it('esconde los botones de accion a quien no tiene el permiso', function () {

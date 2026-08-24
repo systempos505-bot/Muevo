@@ -26,7 +26,7 @@ Pensado para farmacias, tiendas de ropa, zapaterías, ferreterías y supermercad
 | Proveedores | ✅ Listo |
 | Cuentas de pago y tesorería | ✅ Listo |
 | Gastos | ✅ Listo |
-| Promociones | ⬜ Pendiente |
+| Promociones (2x1, %, monto, paquete) | ✅ Listo |
 | Reportes y exportación a CSV | ✅ Listo |
 | Panel de superusuario | ⬜ Pendiente |
 
@@ -96,6 +96,7 @@ app/
     CustomerAccount.php     Crédito, abonos y estado de cuenta
     Treasury.php            Único punto por el que se mueve el dinero
     ExpenseRegistrar.php    Gastos y su efecto en las cuentas
+    PromotionEngine.php     Descuento que hace cada promocion
     Reports.php             Consultas agregadas de los reportes
     TenantProvisioner.php   Deja lista una empresa nueva
   Support/

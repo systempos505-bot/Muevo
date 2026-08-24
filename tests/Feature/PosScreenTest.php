@@ -12,6 +12,7 @@ use App\Models\Product;
 use App\Models\ProductBarcode;
 use App\Models\ProductPrice;
 use App\Models\ProductUnit;
+use App\Models\Promotion;
 use App\Models\Sale;
 use App\Models\Shift;
 use App\Models\Unit;
@@ -395,5 +396,101 @@ describe('ticket', function () {
             ->set('cancelReason', 'Motivo suficiente')
             ->call('cancel')
             ->assertForbidden();
+    });
+});
+
+// =============================================================
+// Promociones en la caja
+// =============================================================
+
+describe('promociones en la caja', function () {
+    /**
+     * Lo que la caja muestra tiene que ser exactamente lo que se va a
+     * cobrar: si el cajero anuncia un total y el sistema cobra otro, el
+     * problema no lo tiene el sistema, lo tiene quien esta atendiendo.
+     */
+    beforeEach(function () {
+        app(CashRegister::class)->open($this->terminalId, $this->branchId, 0);
+
+        $this->promo = Promotion::create([
+            'name' => '2x1 en arroz',
+            'type' => 'nxm',
+            'applies_to_all' => true,
+            'buy_quantity' => 2,
+            'get_quantity' => 1,
+        ]);
+    });
+
+    it('descuenta la promocion en el total del carrito', function () {
+        $component = Livewire::test(Register::class)
+            ->call('addProduct', $this->product->id);
+
+        $key = array_key_first($component->get('cart'));
+
+        $component->set("cart.{$key}.quantity", 4);
+
+        // 4 a 30 son 120; el 2x1 regala 2, quedan 60.
+        expect($component->instance()->totals['subtotal'])->toBe(120.0)
+            ->and($component->instance()->totals['promotion'])->toBe(60.0)
+            ->and($component->instance()->totals['total'])->toBe(60.0);
+    });
+
+    it('anuncia la promocion en la linea', function () {
+        $component = Livewire::test(Register::class)
+            ->call('addProduct', $this->product->id);
+
+        $key = array_key_first($component->get('cart'));
+
+        $component->set("cart.{$key}.quantity", 2)
+            ->assertSee('2x1 en arroz')
+            ->assertSee('ahorra');
+    });
+
+    it('no anuncia nada cuando no se alcanza la promocion', function () {
+        Livewire::test(Register::class)
+            ->call('addProduct', $this->product->id)
+            ->assertDontSee('ahorra');
+    });
+
+    it('cobra lo mismo que mostro', function () {
+        $component = Livewire::test(Register::class)
+            ->call('addProduct', $this->product->id);
+
+        $key = array_key_first($component->get('cart'));
+
+        $component->set("cart.{$key}.quantity", 4);
+
+        $shown = $component->instance()->totals['total'];
+
+        $component->call('openPayment')
+            ->call('checkout')
+            ->assertHasNoErrors();
+
+        expect(Sale::latest('created_at')->first()->total)->toBe($shown);
+    });
+
+    it('la promocion apagada deja de descontar', function () {
+        $this->promo->update(['status' => 'inactive']);
+
+        $component = Livewire::test(Register::class)
+            ->call('addProduct', $this->product->id);
+
+        $key = array_key_first($component->get('cart'));
+        $component->set("cart.{$key}.quantity", 4);
+
+        expect($component->instance()->totals['total'])->toBe(120.0);
+    });
+
+    it('el efectivo se propone ya con la promocion aplicada', function () {
+        $component = Livewire::test(Register::class)
+            ->call('addProduct', $this->product->id);
+
+        $key = array_key_first($component->get('cart'));
+
+        $component->set("cart.{$key}.quantity", 4)->call('openPayment');
+
+        // Proponer el importe sin descuento haria que el cajero cobre de
+        // mas en la venta mas comun, la de efectivo exacto.
+        expect(array_values($component->get('payments'))[0])->toBe(60.0);
     });
 });
