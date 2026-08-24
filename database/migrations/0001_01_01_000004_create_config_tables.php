@@ -61,7 +61,8 @@ return new class extends Migration
             $table->foreignUuid('tenant_id')->constrained()->cascadeOnDelete();
             $table->foreignUuid('branch_id')->nullable()->constrained()->cascadeOnDelete();
             $table->enum('doc_type', [
-                'sale', 'quote', 'credit_note', 'purchase', 'expense', 'transfer', 'adjustment',
+                'sale', 'quote', 'credit_note', 'purchase', 'expense',
+                'transfer', 'adjustment', 'shift',
             ]);
             $table->string('prefix', 16)->default('');
             $table->unsignedBigInteger('next_number')->default(1);

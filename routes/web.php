@@ -5,8 +5,10 @@ use App\Livewire\Auth\Register;
 use App\Livewire\Catalog;
 use App\Livewire\Dashboard;
 use App\Livewire\Inventory;
+use App\Livewire\Partners;
 use App\Livewire\Pos;
 use App\Livewire\Products;
+use App\Livewire\Purchases;
 use App\Livewire\Sales;
 use Illuminate\Support\Facades\Route;
 
@@ -48,6 +50,12 @@ Route::middleware('auth')->group(function () {
     // --- Ventas ---
     Route::get('/ventas', Sales\Index::class)->name('sales');
     Route::get('/ventas/{saleId}', Sales\Show::class)->name('sales.show');
+
+    // --- Compras y proveedores ---
+    Route::get('/compras', Purchases\Index::class)->name('purchases');
+    Route::get('/compras/nueva', Purchases\Form::class)->name('purchases.create');
+    Route::get('/compras/{purchaseId}', Purchases\Show::class)->name('purchases.show');
+    Route::get('/proveedores', Partners\Suppliers::class)->name('suppliers');
 
     // --- Inventario ---
     Route::get('/inventario', Inventory\Index::class)->name('inventory');

@@ -28,6 +28,8 @@ class Navigation
             ['label' => 'Inventario', 'icon' => '▣', 'route' => 'inventory',          'match' => 'inventory', 'permission' => 'inventory.view', 'primary' => false],
             ['label' => 'Ventas',     'icon' => '◫', 'route' => 'sales',              'match' => 'sales',     'permission' => 'sales.view',     'primary' => true],
             ['label' => 'Caja',       'icon' => '▦', 'route' => 'cash',               'match' => 'cash',      'permission' => 'cash.open',      'primary' => true],
+            ['label' => 'Compras',    'icon' => '▽', 'route' => 'purchases',          'match' => 'purchases', 'permission' => 'purchases.view', 'primary' => false],
+            ['label' => 'Proveedores', 'icon' => '☖', 'route' => 'suppliers',          'match' => 'suppliers', 'permission' => 'purchases.view', 'primary' => false],
             ['label' => 'Catalogo',   'icon' => '☰', 'route' => 'catalog.categories', 'match' => 'catalog',   'permission' => 'products.view',  'primary' => false],
             ['label' => 'Clientes',   'icon' => '☺', 'route' => 'customers',          'match' => 'customers', 'permission' => 'customers.view', 'primary' => false],
             ['label' => 'Reportes',   'icon' => '◔', 'route' => 'reports',            'match' => 'reports',   'permission' => 'reports.view',   'primary' => true],

@@ -207,6 +207,20 @@
                         Captura el precio de compra para poder ver el margen y usar los atajos.
                     </p>
                 @endif
+
+                {{-- Sin precio en la lista de mostrador el producto no se
+                     puede cobrar en la caja, asi que conviene avisarlo aqui
+                     y no cuando el cliente ya esta enfrente. --}}
+                @php
+                    $defaultListId = $this->priceLists->firstWhere('is_default', true)?->id;
+                    $defaultRow = collect($priceRows)->firstWhere('price_list_id', $defaultListId);
+                @endphp
+                @if ($defaultListId && (float) ($defaultRow['price'] ?? 0) <= 0)
+                    <p class="mt-3 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                        Sin precio en <strong>{{ $defaultRow['name'] ?? 'la lista de mostrador' }}</strong>
+                        este producto no se va a poder cobrar en la caja.
+                    </p>
+                @endif
             </x-card>
         </div>
 

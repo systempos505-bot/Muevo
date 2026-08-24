@@ -104,7 +104,7 @@ class CashRegister
     protected function nextFolio(string $branchId): string
     {
         $series = DocumentSeries::firstOrCreate(
-            ['branch_id' => $branchId, 'doc_type' => 'adjustment'],
+            ['branch_id' => $branchId, 'doc_type' => 'shift'],
             ['tenant_id' => Tenancy::id(), 'prefix' => 'T-', 'padding' => 5],
         );
 

@@ -596,6 +596,13 @@ class Form extends Page
         }
     }
 
+    /**
+     * Guarda los precios capturados.
+     *
+     * Un cero significa "sin precio en esta lista", no "gratis": la fila
+     * se borra en lugar de guardarse. Si se guardara, la caja resolveria
+     * un precio de cero y dejaria vender el producto regalado.
+     */
     protected function syncPrices(Product $product): void
     {
         foreach ($this->priceRows as $row) {
@@ -607,6 +614,12 @@ class Form extends Page
                 ->first();
 
             $newPrice = (float) $row['price'];
+
+            if ($newPrice <= 0) {
+                $existing?->delete();
+
+                continue;
+            }
 
             if ($existing && (float) $existing->price === $newPrice) {
                 continue;

@@ -18,11 +18,12 @@ Pensado para farmacias, tiendas de ropa, zapaterías, ferreterías y supermercad
 | Listas de precios | ✅ Listo |
 | Inventario: existencias, kardex y ajustes | ✅ Listo |
 | Inventario: lotes, vencimientos y series | ✅ Esquema listo |
-| Clientes y proveedores | ✅ Esquema listo |
+| Clientes | ✅ Esquema listo |
 | Punto de venta | ✅ Listo |
 | Caja y turnos | ✅ Listo |
 | Ventas: historial, ticket y anulación | ✅ Listo |
-| Compras | ⬜ Pendiente |
+| Compras y cuentas por pagar | ✅ Listo |
+| Proveedores | ✅ Listo |
 | Cuentas de pago y gastos | ⬜ Pendiente |
 | Promociones | ⬜ Pendiente |
 | Reportes | ⬜ Pendiente |
@@ -79,6 +80,8 @@ app/
     Inventory/        Existencias, ajustes y kardex
     Pos/              Pantalla de venta y caja
     Sales/            Historial y ticket
+    Purchases/        Compras y cuentas por pagar
+    Partners/         Proveedores
   Models/             Modelos Eloquent
     Concerns/
       BelongsToTenant.php   Aísla los datos por empresa
@@ -87,6 +90,7 @@ app/
     InventoryManager.php    Único punto por el que se mueve el stock
     SaleRegistrar.php       Registra la venta completa
     CashRegister.php        Apertura, movimientos y corte de caja
+    PurchaseRegistrar.php   Recibe mercancia y actualiza costos
     TenantProvisioner.php   Deja lista una empresa nueva
   Support/
     Tenancy.php             Empresa activa durante la petición
@@ -101,7 +105,7 @@ resources/views/
 tests/
   Unit/               Motor de precios
   Feature/            Registro, sesión, productos, catálogo, inventario,
-                      ventas, caja y aislamiento entre empresas
+                      ventas, caja, compras y aislamiento entre empresas
 ```
 
 ---
@@ -176,6 +180,27 @@ sistema lo dice, no lo tapa.
 
 **Anular no borra.** La venta queda marcada, la mercancía vuelve al inventario
 con su propio movimiento y el crédito se le devuelve al cliente.
+
+**La compra es la puerta por la que entra la mercancía.** Al recibirla ocurren
+tres cosas en la misma transacción: el stock entra, el costo del producto se
+actualiza y la deuda se le carga al proveedor si fue a crédito. Una compra a
+medias dejaría existencia sin costo o deuda sin mercancía.
+
+**Comprar por caja calcula el costo por pieza.** Una caja de 24 a 240 significa
+que la pieza cuesta 10, y ese es el número que alimenta el margen de venta —
+no el 240.
+
+**Subir el costo sube el precio, pero solo donde corresponde.** Las listas que
+trabajan por margen se recalculan solas al recibir una compra. Un precio que
+alguien capturó a mano no se toca.
+
+**No se puede anular una compra cuya mercancía ya se vendió.** Devolver algo
+que ya salió dejaría el inventario en negativo sin explicación; el sistema pide
+ajustar en lugar de anular.
+
+**Un precio en cero significa "sin precio", no "gratis".** No se guarda, para
+que la caja no resuelva un cero como precio válido y deje regalar el producto.
+La pantalla del producto avisa cuando falta el precio de mostrador.
 
 **Las cabeceras de pantalla van dentro del componente Livewire.** Si vivieran
 en el layout quedarían fuera de su elemento raíz y los botones con `wire:click`

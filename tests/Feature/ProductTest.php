@@ -286,3 +286,55 @@ it('desactiva las presentaciones que se quitan en lugar de borrarlas', function 
     expect(ProductUnit::where('product_id', $product->id)->count())->toBe(2)
         ->and(ProductUnit::where('product_id', $product->id)->where('status', 'active')->count())->toBe(1);
 });
+
+it('no guarda un precio en cero, que significa sin precio', function () {
+    $publico = PriceList::where('is_default', true)->first();
+
+    Livewire::test(Form::class)
+        ->set('name', 'Producto sin precio')
+        ->set('sku', 'SIN-1')
+        ->set('cost', 10)
+        ->set('trackLots', false)
+        ->set('trackExpiry', false)
+        ->set('priceRows', [[
+            'price_list_id' => $publico->id,
+            'name' => 'Publico',
+            'price' => 0,
+            'margin' => null,
+        ]])
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $product = Product::firstWhere('sku', 'SIN-1');
+
+    // Guardar un cero haria que la caja lo resolviera como precio valido
+    // y dejara vender el producto regalado.
+    expect(ProductPrice::where('product_id', $product->id)->count())->toBe(0);
+});
+
+it('borra el precio al dejarlo en cero al editar', function () {
+    $publico = PriceList::where('is_default', true)->first();
+
+    Livewire::test(Form::class)
+        ->set('name', 'Producto con precio')
+        ->set('sku', 'CON-1')
+        ->set('trackLots', false)
+        ->set('trackExpiry', false)
+        ->set('priceRows', [[
+            'price_list_id' => $publico->id,
+            'name' => 'Publico',
+            'price' => 50,
+            'margin' => null,
+        ]])
+        ->call('save');
+
+    $product = Product::firstWhere('sku', 'CON-1');
+    expect(ProductPrice::where('product_id', $product->id)->count())->toBe(1);
+
+    Livewire::test(Form::class, ['productId' => $product->id])
+        ->set('priceRows.0.price', 0)
+        ->call('save')
+        ->assertHasNoErrors();
+
+    expect(ProductPrice::where('product_id', $product->id)->count())->toBe(0);
+});

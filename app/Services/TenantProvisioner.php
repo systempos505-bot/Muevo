@@ -133,6 +133,7 @@ class TenantProvisioner
                 'inventory.count' => true,
                 'purchases.view' => true,
                 'purchases.create' => true,
+                'purchases.void' => true,
             ],
         ],
     ];
@@ -285,13 +286,24 @@ class TenantProvisioner
         }
     }
 
+    /** Prefijo con el que arranca el folio de cada documento. */
+    protected const DOCUMENT_PREFIXES = [
+        'sale' => 'V-',
+        'quote' => 'COT-',
+        'credit_note' => 'NC-',
+        'purchase' => 'C-',
+        'expense' => 'G-',
+        'shift' => 'T-',
+    ];
+
     protected function createDocumentSeries(Branch $branch): void
     {
-        foreach (['sale', 'quote', 'credit_note', 'purchase', 'expense'] as $docType) {
+        foreach (self::DOCUMENT_PREFIXES as $docType => $prefix) {
             DocumentSeries::create([
                 'branch_id' => $branch->id,
                 'doc_type' => $docType,
-                'prefix' => $docType === 'sale' ? 'V-' : '',
+                'prefix' => $prefix,
+                'padding' => $docType === 'shift' ? 5 : 6,
             ]);
         }
     }
