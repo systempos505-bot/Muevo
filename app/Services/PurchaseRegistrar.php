@@ -28,7 +28,10 @@ use RuntimeException;
  */
 class PurchaseRegistrar
 {
-    public function __construct(protected InventoryManager $inventory) {}
+    public function __construct(
+        protected InventoryManager $inventory,
+        protected Treasury $treasury,
+    ) {}
 
     /**
      * @param  array<int, array{
@@ -387,6 +390,15 @@ class PurchaseRegistrar
             'notes' => 'Pago de contado',
             'created_by' => auth()->id(),
         ]);
+
+        $this->treasury->postPayment(
+            paymentMethodId: $paymentMethodId,
+            direction: 'out',
+            amount: (float) $purchase->total,
+            description: "Compra {$purchase->folio}",
+            source: 'purchase',
+            sourceId: $purchase->id,
+        );
     }
 
     /** Suma la deuda al proveedor. */
@@ -433,6 +445,15 @@ class PurchaseRegistrar
             ]);
 
             $purchase->update(['paid' => Pricing::round($purchase->paid + $amount, 2)]);
+
+            $this->treasury->postPayment(
+                paymentMethodId: $paymentMethodId,
+                direction: 'out',
+                amount: $amount,
+                description: "Abono a compra {$purchase->folio}",
+                source: 'supplier_payment',
+                sourceId: $purchase->id,
+            );
 
             if ($purchase->supplier) {
                 $purchase->supplier->update([

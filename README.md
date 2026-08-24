@@ -24,7 +24,8 @@ Pensado para farmacias, tiendas de ropa, zapaterías, ferreterías y supermercad
 | Ventas: historial, ticket y anulación | ✅ Listo |
 | Compras y cuentas por pagar | ✅ Listo |
 | Proveedores | ✅ Listo |
-| Cuentas de pago y gastos | ⬜ Pendiente |
+| Cuentas de pago y tesorería | ✅ Listo |
+| Gastos | ✅ Listo |
 | Promociones | ⬜ Pendiente |
 | Reportes | ⬜ Pendiente |
 | Panel de superusuario | ⬜ Pendiente |
@@ -82,6 +83,7 @@ app/
     Sales/            Historial y ticket
     Purchases/        Compras y cuentas por pagar
     Partners/         Clientes y proveedores
+    Finance/          Cuentas de pago y gastos
   Models/             Modelos Eloquent
     Concerns/
       BelongsToTenant.php   Aísla los datos por empresa
@@ -92,6 +94,8 @@ app/
     CashRegister.php        Apertura, movimientos y corte de caja
     PurchaseRegistrar.php   Recibe mercancía y actualiza costos
     CustomerAccount.php     Crédito, abonos y estado de cuenta
+    Treasury.php            Único punto por el que se mueve el dinero
+    ExpenseRegistrar.php    Gastos y su efecto en las cuentas
     TenantProvisioner.php   Deja lista una empresa nueva
   Support/
     Tenancy.php             Empresa activa durante la petición
@@ -106,8 +110,8 @@ resources/views/
 tests/
   Unit/               Motor de precios
   Feature/            Registro, sesión, productos, catálogo, inventario,
-                      ventas, caja, compras, clientes y aislamiento
-                      entre empresas
+                      ventas, caja, compras, clientes, tesorería y
+                      aislamiento entre empresas
 ```
 
 ---
@@ -211,6 +215,23 @@ Uno por transferencia no.
 
 **No se baja el límite de crédito por debajo del saldo**, ni se desactiva a un
 cliente o proveedor que debe: dejarlo fuera de vista es como perder la cuenta.
+
+**Todo el dinero pasa por `Treasury`.** Actualizar el saldo de una cuenta y
+escribir su movimiento ocurren juntos, con la fila bloqueada. Las formas de pago
+apuntan a una cuenta — el efectivo a la caja, la tarjeta al banco — y por eso una
+venta, una compra o un abono aterrizan solos donde corresponde. El crédito no
+aterriza en ninguna: ese dinero todavía no existe.
+
+**El saldo se comprueba con la fila recién leída, no con el modelo que llegó.**
+Entre que se abre una pantalla y se confirma un traslado puede colarse otro
+movimiento; validar contra un saldo viejo dejaría la cuenta en negativo.
+
+**Los traslados no son ingreso ni gasto.** El dinero solo cambia de bolsillo, así
+que quedan fuera del desglose de "en qué entró y en qué salió". Entre monedas
+distintas, el monto que llega se calcula y se guarda con su tipo de cambio.
+
+**Un gasto puede no tocar ninguna cuenta.** Un negocio que solo quiere anotar en
+qué se le va el dinero no está obligado a llevar tesorería.
 
 **Un precio en cero significa "sin precio", no "gratis".** No se guarda, para
 que la caja no resuelva un cero como precio válido y deje regalar el producto.

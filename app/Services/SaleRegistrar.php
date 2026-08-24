@@ -24,7 +24,10 @@ use RuntimeException;
  */
 class SaleRegistrar
 {
-    public function __construct(protected InventoryManager $inventory) {}
+    public function __construct(
+        protected InventoryManager $inventory,
+        protected Treasury $treasury,
+    ) {}
 
     /**
      * @param  array<int, array{
@@ -127,6 +130,27 @@ class SaleRegistrar
                     'amount_primary' => $payment['amount_primary'],
                     'reference' => $payment['reference'],
                 ]);
+
+                // El dinero cobrado entra a la cuenta de esa forma de pago.
+                // El credito no entra a ninguna: todavia no se cobro.
+                if (! $payment['is_credit']) {
+                    $received = $payment['amount_primary'];
+
+                    // El cambio sale del mismo cajon del que entro el pago,
+                    // asi que se descuenta de lo que realmente quedo.
+                    if ($payment['allows_change']) {
+                        $received = Pricing::round($received - $change, 2);
+                    }
+
+                    $this->treasury->postPayment(
+                        paymentMethodId: $payment['method']->id,
+                        direction: 'in',
+                        amount: max(0, $received),
+                        description: "Venta {$sale->folio}",
+                        source: 'sale',
+                        sourceId: $sale->id,
+                    );
+                }
             }
 
             $this->chargeCredit($paymentRows, $customerId);

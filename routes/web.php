@@ -4,6 +4,7 @@ use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\Catalog;
 use App\Livewire\Dashboard;
+use App\Livewire\Finance;
 use App\Livewire\Inventory;
 use App\Livewire\Partners;
 use App\Livewire\Pos;
@@ -60,6 +61,11 @@ Route::middleware('auth')->group(function () {
     // --- Clientes ---
     Route::get('/clientes', Partners\Customers::class)->name('customers');
     Route::get('/clientes/{customerId}', Partners\CustomerShow::class)->name('customers.show');
+
+    // --- Finanzas ---
+    Route::get('/cuentas', Finance\Accounts::class)->name('accounts');
+    Route::get('/cuentas/{accountId}', Finance\AccountShow::class)->name('accounts.show');
+    Route::get('/gastos', Finance\Expenses::class)->name('expenses');
 
     // --- Inventario ---
     Route::get('/inventario', Inventory\Index::class)->name('inventory');

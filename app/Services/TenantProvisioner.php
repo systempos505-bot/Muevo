@@ -2,11 +2,13 @@
 
 namespace App\Services;
 
+use App\Models\Account;
 use App\Models\Branch;
 use App\Models\Category;
 use App\Models\Currency;
 use App\Models\CustomerType;
 use App\Models\DocumentSeries;
+use App\Models\ExpenseCategory;
 use App\Models\PaymentMethod;
 use App\Models\PriceList;
 use App\Models\Role;
@@ -77,13 +79,29 @@ class TenantProvisioner
 
     /**
      * Formas de pago iniciales.
-     * [codigo, nombre, tipo, entra al cajon, permite cambio]
+     * [codigo, nombre, tipo, entra al cajon, permite cambio, cuenta]
+     *
+     * La cuenta dice donde cae el dinero: el efectivo a la caja, la
+     * tarjeta y la transferencia al banco. El credito no cae en ninguna
+     * parte hasta que el cliente pague.
      */
     protected const PAYMENT_METHODS = [
-        ['EFE', 'Efectivo', 'cash', true, true],
-        ['TAR', 'Tarjeta', 'card', false, false],
-        ['TRA', 'Transferencia', 'transfer', false, false],
-        ['CRE', 'Credito', 'credit', false, false],
+        ['EFE', 'Efectivo', 'cash', true, true, 'Caja'],
+        ['TAR', 'Tarjeta', 'card', false, false, 'Banco'],
+        ['TRA', 'Transferencia', 'transfer', false, false, 'Banco'],
+        ['CRE', 'Credito', 'credit', false, false, null],
+    ];
+
+    /** Cuentas de pago iniciales. [nombre, tipo] */
+    protected const ACCOUNTS = [
+        ['Caja', 'cash'],
+        ['Banco', 'bank'],
+    ];
+
+    /** Categorias de gasto que casi cualquier negocio usa. */
+    protected const EXPENSE_CATEGORIES = [
+        'Renta', 'Servicios', 'Sueldos', 'Transporte',
+        'Mantenimiento', 'Papeleria', 'Otros',
     ];
 
     /** Permisos de cada rol de sistema. */
@@ -159,7 +177,9 @@ class TenantProvisioner
             $this->createTax($taxRate);
             $units = $this->createUnits();
             $priceLists = $this->createPriceLists();
-            $this->createPaymentMethods();
+            $accounts = $this->createAccounts();
+            $this->createPaymentMethods($accounts);
+            $this->createExpenseCategories();
             $this->createCategories($tenant->business_type);
 
             CustomerType::create([
@@ -264,17 +284,44 @@ class TenantProvisioner
         return $lists;
     }
 
-    protected function createPaymentMethods(): void
+    /** @return array<string, Account> */
+    protected function createAccounts(): array
     {
-        foreach (self::PAYMENT_METHODS as $position => [$code, $name, $type, $drawer, $change]) {
+        $currencyId = Currency::where('is_primary', true)->value('id');
+        $accounts = [];
+
+        foreach (self::ACCOUNTS as $index => [$name, $type]) {
+            $accounts[$name] = Account::create([
+                'name' => $name,
+                'type' => $type,
+                'currency_id' => $currencyId,
+                'is_default' => $index === 0,
+            ]);
+        }
+
+        return $accounts;
+    }
+
+    /** @param  array<string, Account>  $accounts */
+    protected function createPaymentMethods(array $accounts): void
+    {
+        foreach (self::PAYMENT_METHODS as $position => [$code, $name, $type, $drawer, $change, $account]) {
             PaymentMethod::create([
                 'code' => $code,
                 'name' => $name,
                 'type' => $type,
+                'account_id' => $account ? $accounts[$account]->id : null,
                 'affects_drawer' => $drawer,
                 'allows_change' => $change,
                 'position' => $position,
             ]);
+        }
+    }
+
+    protected function createExpenseCategories(): void
+    {
+        foreach (self::EXPENSE_CATEGORIES as $name) {
+            ExpenseCategory::create(['name' => $name]);
         }
     }
 

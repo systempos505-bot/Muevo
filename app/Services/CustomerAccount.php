@@ -21,6 +21,8 @@ use RuntimeException;
  */
 class CustomerAccount
 {
+    public function __construct(protected Treasury $treasury) {}
+
     /**
      * Recibe un abono y baja el saldo.
      *
@@ -64,6 +66,15 @@ class CustomerAccount
             ]);
 
             $locked->update(['balance' => Pricing::round($locked->balance - $amount, 2)]);
+
+            $this->treasury->postPayment(
+                paymentMethodId: $paymentMethodId,
+                direction: 'in',
+                amount: $amount,
+                description: "Abono de {$locked->name}",
+                source: 'customer_payment',
+                sourceId: $payment->id,
+            );
 
             return $payment;
         });
