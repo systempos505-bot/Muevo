@@ -57,6 +57,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/compras/{purchaseId}', Purchases\Show::class)->name('purchases.show');
     Route::get('/proveedores', Partners\Suppliers::class)->name('suppliers');
 
+    // --- Clientes ---
+    Route::get('/clientes', Partners\Customers::class)->name('customers');
+    Route::get('/clientes/{customerId}', Partners\CustomerShow::class)->name('customers.show');
+
     // --- Inventario ---
     Route::get('/inventario', Inventory\Index::class)->name('inventory');
     Route::get('/inventario/{productId}/kardex', Inventory\Kardex::class)->name('inventory.kardex');

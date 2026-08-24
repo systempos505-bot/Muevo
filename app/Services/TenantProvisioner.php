@@ -102,6 +102,7 @@ class TenantProvisioner
                 'products.view' => true,
                 'customers.view' => true,
                 'customers.create' => true,
+                'customers.edit' => true,
                 'cash.open' => true,
                 'cash.close' => true,
                 'inventory.view' => true,

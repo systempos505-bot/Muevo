@@ -93,6 +93,20 @@ class Shift extends Model
         return (float) $this->sales()->where('status', 'completed')->sum('change');
     }
 
+    /**
+     * Abonos de clientes recibidos en el turno con una forma de pago que
+     * entra al cajon. Es dinero que esta fisicamente ahi, asi que cuenta
+     * en el arqueo igual que una venta de contado.
+     */
+    public function customerPayments(): float
+    {
+        return (float) CustomerPayment::query()
+            ->join('payment_methods', 'payment_methods.id', '=', 'customer_payments.payment_method_id')
+            ->where('customer_payments.shift_id', $this->id)
+            ->where('payment_methods.affects_drawer', true)
+            ->sum('customer_payments.amount');
+    }
+
     public function cashIn(): float
     {
         return (float) $this->cashMovements()->where('type', 'in')->sum('amount');
@@ -104,14 +118,15 @@ class Shift extends Model
     }
 
     /**
-     * Lo que deberia haber en el cajon:
-     * fondo + ventas en efectivo - cambio entregado + entradas - salidas.
+     * Lo que deberia haber en el cajon: fondo + ventas en efectivo
+     * + abonos de clientes - cambio entregado + entradas - salidas.
      */
     public function expectedCash(): float
     {
         return round(
             $this->opening_amount
             + $this->cashSales()
+            + $this->customerPayments()
             - $this->changeGiven()
             + $this->cashIn()
             - $this->cashOut(),

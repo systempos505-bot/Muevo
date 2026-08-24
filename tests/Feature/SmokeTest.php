@@ -61,6 +61,7 @@ it('carga todas las pantallas con sesion iniciada', function () {
         route('purchases'),
         route('purchases.create'),
         route('suppliers'),
+        route('customers'),
     ];
 
     foreach ($routes as $url) {
@@ -79,6 +80,7 @@ it('muestra los botones de accion a quien tiene el permiso', function () {
     $this->get(route('cash'))->assertSee('Abrir caja');
     $this->get(route('purchases'))->assertSee('+ Nueva compra');
     $this->get(route('suppliers'))->assertSee('+ Proveedor');
+    $this->get(route('customers'))->assertSee('+ Cliente');
     $this->get(route('catalog.categories'))->assertSee('+ Categoria');
     $this->get(route('catalog.brands'))->assertSee('+ Marca');
     $this->get(route('catalog.units'))->assertSee('+ Unidad');

@@ -71,6 +71,7 @@ class CashDrawer extends Page
         return [
             'opening' => $shift->opening_amount,
             'cash_sales' => $shift->cashSales(),
+            'customer_payments' => $shift->customerPayments(),
             'change' => $shift->changeGiven(),
             'cash_in' => $shift->cashIn(),
             'cash_out' => $shift->cashOut(),

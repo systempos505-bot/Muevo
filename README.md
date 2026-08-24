@@ -18,7 +18,7 @@ Pensado para farmacias, tiendas de ropa, zapaterías, ferreterías y supermercad
 | Listas de precios | ✅ Listo |
 | Inventario: existencias, kardex y ajustes | ✅ Listo |
 | Inventario: lotes, vencimientos y series | ✅ Esquema listo |
-| Clientes | ✅ Esquema listo |
+| Clientes y cuentas por cobrar | ✅ Listo |
 | Punto de venta | ✅ Listo |
 | Caja y turnos | ✅ Listo |
 | Ventas: historial, ticket y anulación | ✅ Listo |
@@ -81,7 +81,7 @@ app/
     Pos/              Pantalla de venta y caja
     Sales/            Historial y ticket
     Purchases/        Compras y cuentas por pagar
-    Partners/         Proveedores
+    Partners/         Clientes y proveedores
   Models/             Modelos Eloquent
     Concerns/
       BelongsToTenant.php   Aísla los datos por empresa
@@ -90,7 +90,8 @@ app/
     InventoryManager.php    Único punto por el que se mueve el stock
     SaleRegistrar.php       Registra la venta completa
     CashRegister.php        Apertura, movimientos y corte de caja
-    PurchaseRegistrar.php   Recibe mercancia y actualiza costos
+    PurchaseRegistrar.php   Recibe mercancía y actualiza costos
+    CustomerAccount.php     Crédito, abonos y estado de cuenta
     TenantProvisioner.php   Deja lista una empresa nueva
   Support/
     Tenancy.php             Empresa activa durante la petición
@@ -105,7 +106,8 @@ resources/views/
 tests/
   Unit/               Motor de precios
   Feature/            Registro, sesión, productos, catálogo, inventario,
-                      ventas, caja, compras y aislamiento entre empresas
+                      ventas, caja, compras, clientes y aislamiento
+                      entre empresas
 ```
 
 ---
@@ -197,6 +199,18 @@ alguien capturó a mano no se toca.
 **No se puede anular una compra cuya mercancía ya se vendió.** Devolver algo
 que ya salió dejaría el inventario en negativo sin explicación; el sistema pide
 ajustar en lugar de anular.
+
+**El saldo del cliente lo mueve una sola pieza.** Una venta a crédito lo sube,
+un abono lo baja, y el estado de cuenta se arma de esas dos fuentes con el saldo
+corrido — sin una tabla de movimientos que duplicaría datos que ya viven en la
+venta. De una venta mixta solo se carga la parte que quedó a deber.
+
+**Un abono en efectivo entra al cajón.** Si hay turno abierto, cuenta en el
+arqueo igual que una venta de contado, porque el dinero está físicamente ahí.
+Uno por transferencia no.
+
+**No se baja el límite de crédito por debajo del saldo**, ni se desactiva a un
+cliente o proveedor que debe: dejarlo fuera de vista es como perder la cuenta.
 
 **Un precio en cero significa "sin precio", no "gratis".** No se guarda, para
 que la caja no resuelva un cero como precio válido y deje regalar el producto.

@@ -47,6 +47,14 @@
                             +{{ $currency?->symbol }}{{ number_format($this->summary['cash_sales'], 2) }}
                         </span>
                     </div>
+                    @if ($this->summary['customer_payments'] > 0)
+                        <div class="flex justify-between">
+                            <span class="text-slate-600">Abonos de clientes</span>
+                            <span class="tabular-nums text-emerald-700">
+                                +{{ $currency?->symbol }}{{ number_format($this->summary['customer_payments'], 2) }}
+                            </span>
+                        </div>
+                    @endif
                     <div class="flex justify-between">
                         <span class="text-slate-600">Cambio entregado</span>
                         <span class="tabular-nums text-rose-600">
