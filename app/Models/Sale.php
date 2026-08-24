@@ -63,9 +63,30 @@ class Sale extends Model
         return $this->belongsTo(Shift::class);
     }
 
+    public function creditNotes(): HasMany
+    {
+        return $this->hasMany(CreditNote::class);
+    }
+
     public function isCancelled(): bool
     {
         return $this->status === 'cancelled';
+    }
+
+    /** Lo que ya se le devolvio al cliente de esta venta. */
+    public function returnedTotal(): float
+    {
+        return round((float) $this->creditNotes()->registered()->sum('total'), 2);
+    }
+
+    /** Si todavia queda algo por devolver. */
+    public function hasReturnableItems(): bool
+    {
+        if ($this->isCancelled()) {
+            return false;
+        }
+
+        return $this->items->contains(fn (SaleItem $item) => $item->returnableQuantity() > 0);
     }
 
     /**

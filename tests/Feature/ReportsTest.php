@@ -13,6 +13,7 @@ use App\Services\ExpenseRegistrar;
 use App\Services\InventoryManager;
 use App\Services\PurchaseRegistrar;
 use App\Services\Reports;
+use App\Services\ReturnRegistrar;
 use App\Services\SaleRegistrar;
 
 beforeEach(function () {
@@ -331,5 +332,71 @@ describe('otros reportes', function () {
         sell(1, 150);
 
         expect($this->reports->deadStock($this->today, $this->today))->toBe([]);
+    });
+});
+
+// =============================================================
+// Devoluciones
+// =============================================================
+
+describe('devoluciones en el reporte', function () {
+    it('resta lo devuelto de las ventas y su costo del costo', function () {
+        sell(4, 150);   // 600 vendidos, 400 de costo
+
+        $sale = Sale::latest('created_at')->first();
+
+        app(ReturnRegistrar::class)->register(
+            sale: $sale,
+            lines: [['sale_item_id' => $sale->items->first()->id, 'quantity' => 1]],
+            reason: 'Vino defectuoso',
+        );
+
+        $pl = $this->reports->profitAndLoss($this->today, $this->today);
+
+        // Sin restarlo, el negocio se veria mas rentable justo por la
+        // mercancia que tuvo que regresar.
+        expect($pl['gross_revenue'])->toBe(600.0)
+            ->and($pl['returns'])->toBe(150.0)
+            ->and($pl['revenue'])->toBe(450.0)
+            ->and($pl['cost'])->toBe(300.0)
+            ->and($pl['gross_profit'])->toBe(150.0);
+    });
+
+    it('la columna del estado de resultados cierra', function () {
+        sell(4, 150);
+
+        $sale = Sale::latest('created_at')->first();
+
+        app(ReturnRegistrar::class)->register(
+            sale: $sale,
+            lines: [['sale_item_id' => $sale->items->first()->id, 'quantity' => 1]],
+            reason: 'Vino defectuoso',
+        );
+
+        app(ExpenseRegistrar::class)->register(total: 50, description: 'Luz');
+
+        $pl = $this->reports->profitAndLoss($this->today, $this->today);
+
+        // Cada linea tiene que partir de la anterior, o la pantalla
+        // muestra numeros que no se pueden seguir.
+        expect(round($pl['gross_revenue'] - $pl['returns_net'], 2))->toBe($pl['revenue'])
+            ->and(round($pl['revenue'] - $pl['cost'], 2))->toBe($pl['gross_profit'])
+            ->and(round($pl['gross_profit'] - $pl['expenses'], 2))->toBe($pl['net_profit']);
+    });
+
+    it('no cuenta una devolucion de otro periodo', function () {
+        sell(4, 150);
+
+        $sale = Sale::latest('created_at')->first();
+
+        app(ReturnRegistrar::class)->register(
+            sale: $sale,
+            lines: [['sale_item_id' => $sale->items->first()->id, 'quantity' => 1]],
+            reason: 'Vino defectuoso',
+        );
+
+        $pl = $this->reports->profitAndLoss('2020-01-01', '2020-01-31');
+
+        expect($pl['returns'])->toBe(0.0);
     });
 });

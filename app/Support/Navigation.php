@@ -28,6 +28,7 @@ class Navigation
             ['label' => 'Inventario', 'icon' => '▣', 'route' => 'inventory',          'match' => 'inventory', 'permission' => 'inventory.view', 'primary' => false],
             ['label' => 'Ventas',     'icon' => '◫', 'route' => 'sales',              'match' => 'sales',     'permission' => 'sales.view',     'primary' => true],
             ['label' => 'Caja',       'icon' => '▦', 'route' => 'cash',               'match' => 'cash',      'permission' => 'cash.open',      'primary' => true],
+            ['label' => 'Devoluciones', 'icon' => '↩', 'route' => 'returns',          'match' => 'returns',   'permission' => 'sales.view',     'primary' => false],
             ['label' => 'Compras',    'icon' => '▽', 'route' => 'purchases',          'match' => 'purchases', 'permission' => 'purchases.view', 'primary' => false],
             ['label' => 'Cuentas',    'icon' => '◈', 'route' => 'accounts',           'match' => 'accounts',  'permission' => 'finance.view',   'primary' => false],
             ['label' => 'Gastos',     'icon' => '◇', 'route' => 'expenses',           'match' => 'expenses',  'permission' => 'expenses.view',  'primary' => false],

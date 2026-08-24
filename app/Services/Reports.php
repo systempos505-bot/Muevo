@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\CreditNote;
 use App\Models\Customer;
 use App\Models\Expense;
 use App\Models\Inventory;
@@ -260,21 +261,59 @@ class Reports
     public function profitAndLoss(string $from, string $to, ?string $branchId = null): array
     {
         $sales = $this->salesSummary($from, $to, $branchId);
+        $returns = $this->returnsSummary($from, $to, $branchId);
         $expenses = $this->expensesSummary($from, $to);
 
-        $gross = $sales['profit'];
+        // Lo devuelto se resta de lo vendido y su costo del costo: sin
+        // eso, un negocio con devoluciones se veria mas rentable de lo
+        // que es, justo por la mercancia que tuvo que regresar.
+        $revenue = Pricing::round(
+            ($sales['total'] - $sales['tax']) - ($returns['total'] - $returns['tax']),
+            2,
+        );
+        $cost = Pricing::round($sales['cost'] - $returns['cost'], 2);
+
+        $gross = Pricing::round($revenue - $cost, 2);
         $net = Pricing::round($gross - $expenses['total'], 2);
 
         return [
-            'revenue' => Pricing::round($sales['total'] - $sales['tax'], 2),
-            'cost' => $sales['cost'],
+            // Lo vendido antes de restar devoluciones, y lo devuelto sin
+            // impuesto: las dos cifras se muestran para que la columna del
+            // estado de resultados se pueda seguir de arriba a abajo.
+            'gross_revenue' => Pricing::round($sales['total'] - $sales['tax'], 2),
+            'returns_net' => Pricing::round($returns['total'] - $returns['tax'], 2),
+            'returns' => $returns['total'],
+            'revenue' => $revenue,
+            'cost' => $cost,
             'gross_profit' => $gross,
             'expenses' => $expenses['total'],
             'net_profit' => $net,
-            // Margen neto sobre lo vendido sin impuesto.
-            'margin' => $sales['total'] - $sales['tax'] > 0
-                ? Pricing::round($net / ($sales['total'] - $sales['tax']) * 100, 2)
-                : 0.0,
+            // Margen neto sobre lo vendido sin impuesto ni devoluciones.
+            'margin' => $revenue > 0 ? Pricing::round($net / $revenue * 100, 2) : 0.0,
+        ];
+    }
+
+    /**
+     * Devoluciones del periodo.
+     *
+     * @return array{notes: int, total: float, tax: float, cost: float}
+     */
+    public function returnsSummary(string $from, string $to, ?string $branchId = null): array
+    {
+        $row = CreditNote::registered()
+            ->whereBetween('created_at', [$from.' 00:00:00', $to.' 23:59:59'])
+            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+            ->selectRaw('count(*) as notes,
+                         coalesce(sum(total), 0) as total,
+                         coalesce(sum(tax), 0) as tax,
+                         coalesce(sum(cost_total), 0) as cost')
+            ->first();
+
+        return [
+            'notes' => (int) $row->notes,
+            'total' => Pricing::round((float) $row->total, 2),
+            'tax' => Pricing::round((float) $row->tax, 2),
+            'cost' => Pricing::round((float) $row->cost, 2),
         ];
     }
 

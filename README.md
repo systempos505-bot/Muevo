@@ -22,6 +22,7 @@ Pensado para farmacias, tiendas de ropa, zapaterías, ferreterías y supermercad
 | Punto de venta | ✅ Listo |
 | Caja y turnos | ✅ Listo |
 | Ventas: historial, ticket y anulación | ✅ Listo |
+| Devoluciones y notas de crédito | ✅ Listo |
 | Compras y cuentas por pagar | ✅ Listo |
 | Proveedores | ✅ Listo |
 | Cuentas de pago y tesorería | ✅ Listo |
@@ -97,6 +98,7 @@ app/
     Treasury.php            Único punto por el que se mueve el dinero
     ExpenseRegistrar.php    Gastos y su efecto en las cuentas
     PromotionEngine.php     Descuento que hace cada promocion
+    ReturnRegistrar.php     Devoluciones y notas de credito
     Reports.php             Consultas agregadas de los reportes
     TenantProvisioner.php   Deja lista una empresa nueva
   Support/

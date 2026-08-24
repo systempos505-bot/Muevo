@@ -60,9 +60,47 @@ class SaleItem extends Model
         return $this->hasMany(SaleItemPromotion::class);
     }
 
+    /** Devoluciones que ya se hicieron de esta linea. */
+    public function returnItems(): HasMany
+    {
+        return $this->hasMany(CreditNoteItem::class);
+    }
+
     /** Utilidad de la linea: lo que quedo despues del costo. */
     public function profit(): float
     {
         return round($this->net - ($this->unit_cost * $this->base_quantity), 2);
+    }
+
+    /**
+     * Precio efectivo que el cliente pago por unidad.
+     *
+     * Es el de lista menos lo que le tocaba de descuento y promocion.
+     * Devolver al precio de lista lo que se compro en oferta seria
+     * regresarle mas dinero del que entrego.
+     */
+    public function effectiveUnitPrice(): float
+    {
+        if ($this->quantity <= 0) {
+            return 0.0;
+        }
+
+        return round($this->total / $this->quantity, 4);
+    }
+
+    /**
+     * Cuanto queda por devolver de esta linea.
+     *
+     * Se cuenta contra las devoluciones ya emitidas: sin esto, el mismo
+     * producto se podria devolver dos veces.
+     */
+    public function returnableQuantity(): float
+    {
+        $returned = (float) $this->returnItems()
+            ->join('credit_notes', 'credit_notes.id', '=', 'credit_note_items.credit_note_id')
+            ->where('credit_notes.status', 'registered')
+            ->sum('credit_note_items.quantity');
+
+        return round(max(0, $this->quantity - $returned), 3);
     }
 }

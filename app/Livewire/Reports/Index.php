@@ -188,6 +188,14 @@ class Index extends Page
     }
 
     #[Computed]
+    public function returns(): array
+    {
+        [$from, $to] = $this->range();
+
+        return $this->reports()->returnsSummary($from, $to, $this->branch());
+    }
+
+    #[Computed]
     public function expenses(): array
     {
         [$from, $to] = $this->range();
@@ -305,6 +313,8 @@ class Index extends Page
                 [
                     ['Ventas', $this->sales['total']],
                     ['Impuesto', $this->sales['tax']],
+                    ['Devoluciones', $this->returns['total']],
+                    ['Ventas netas sin impuesto', $this->profit['revenue']],
                     ['Costo de lo vendido', $this->profit['cost']],
                     ['Utilidad bruta', $this->profit['gross_profit']],
                     ['Gastos', $this->profit['expenses']],

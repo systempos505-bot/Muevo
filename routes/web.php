@@ -12,6 +12,7 @@ use App\Livewire\Products;
 use App\Livewire\Promotions;
 use App\Livewire\Purchases;
 use App\Livewire\Reports;
+use App\Livewire\Returns;
 use App\Livewire\Sales;
 use Illuminate\Support\Facades\Route;
 
@@ -53,6 +54,10 @@ Route::middleware('auth')->group(function () {
     // --- Ventas ---
     Route::get('/ventas', Sales\Index::class)->name('sales');
     Route::get('/ventas/{saleId}', Sales\Show::class)->name('sales.show');
+
+    // --- Devoluciones ---
+    Route::get('/devoluciones', Returns\Index::class)->name('returns');
+    Route::get('/devoluciones/{noteId}', Returns\Show::class)->name('returns.show');
 
     // --- Compras y proveedores ---
     Route::get('/compras', Purchases\Index::class)->name('purchases');

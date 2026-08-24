@@ -125,6 +125,7 @@ class TenantProvisioner
                 'cash.close' => true,
                 'inventory.view' => true,
                 'promotions.view' => true,
+                'sales.return' => true,
             ],
         ],
         [

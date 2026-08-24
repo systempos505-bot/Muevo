@@ -79,7 +79,12 @@
                 <p class="mt-1 text-2xl font-bold tabular-nums text-slate-900">
                     {{ $money($this->sales['total']) }}
                 </p>
-                <p class="mt-0.5 text-xs text-slate-400">{{ $this->sales['sales'] }} venta(s)</p>
+                <p class="mt-0.5 text-xs text-slate-400">
+                    {{ $this->sales['sales'] }} venta(s)
+                    @if ($this->returns['total'] > 0)
+                        · {{ $money($this->returns['total']) }} devuelto
+                    @endif
+                </p>
             </x-card>
 
             <x-card>
@@ -119,12 +124,20 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
             <x-card title="Estado de resultados" flush>
                 <dl class="divide-y divide-slate-100 text-sm">
-                    @foreach ([
-                        ['Ventas sin impuesto', $this->profit['revenue'], 'text-slate-900'],
+                    {{-- La columna se lee de arriba a abajo: cada linea
+                         parte de la anterior. --}}
+                    @foreach (array_filter([
+                        ['Ventas sin impuesto', $this->profit['gross_revenue'], 'text-slate-900'],
+                        $this->profit['returns_net'] > 0
+                            ? ['Devoluciones', -$this->profit['returns_net'], 'text-slate-600']
+                            : null,
+                        $this->profit['returns_net'] > 0
+                            ? ['Ventas netas', $this->profit['revenue'], 'text-slate-900 font-semibold']
+                            : null,
                         ['Costo de lo vendido', -$this->profit['cost'], 'text-slate-600'],
                         ['Utilidad bruta', $this->profit['gross_profit'], 'text-slate-900 font-semibold'],
                         ['Gastos', -$this->profit['expenses'], 'text-slate-600'],
-                    ] as [$label, $value, $class])
+                    ]) as [$label, $value, $class])
                         <div class="flex justify-between px-5 py-3">
                             <dt class="text-slate-600">{{ $label }}</dt>
                             <dd class="tabular-nums {{ $class }}">{{ $money($value) }}</dd>

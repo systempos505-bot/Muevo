@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\CreditNote;
 use App\Models\Customer;
 use App\Models\DocumentSeries;
 use App\Models\PaymentMethod;
@@ -172,6 +173,151 @@ class SaleRegistrar
 
             return $sale->load(['items', 'payments']);
         });
+    }
+
+    // =========================================================
+    // Anulacion
+    // =========================================================
+
+    /**
+     * Anula una venta completa.
+     *
+     * No borra nada: marca la venta, regresa la mercancia con su propio
+     * movimiento de inventario, saca de la cuenta el dinero que habia
+     * entrado y le quita al cliente el credito que se le cargo.
+     *
+     * Si la venta ya tuvo devoluciones parciales, se descuenta lo que ya
+     * se regreso: sin eso, anular despues de devolver dos piezas meteria
+     * al estante mercancia que ya habia vuelto y sacaria de la caja
+     * dinero que ya habia salido.
+     */
+    public function cancel(Sale $sale, string $reason): Sale
+    {
+        if ($sale->isCancelled()) {
+            throw new RuntimeException('Esta venta ya estaba anulada.');
+        }
+
+        return DB::transaction(function () use ($sale, $reason) {
+            $sale->load(['items.product', 'payments.paymentMethod', 'customer']);
+
+            $this->restoreStock($sale);
+            $this->refundMoney($sale);
+            $this->releaseCredit($sale);
+
+            $sale->update([
+                'status' => 'cancelled',
+                'cancelled_by' => auth()->id(),
+                'cancelled_at' => now(),
+                'cancel_reason' => $reason,
+            ]);
+
+            return $sale->fresh();
+        });
+    }
+
+    /** Regresa al inventario lo que todavia no habia vuelto. */
+    protected function restoreStock(Sale $sale): void
+    {
+        foreach ($sale->items as $item) {
+            $pending = $item->returnableQuantity();
+
+            if ($pending <= 0 || $item->product === null || ! $item->product->track_stock) {
+                continue;
+            }
+
+            $this->inventory->move(
+                product: $item->product,
+                branchId: $sale->branch_id,
+                quantity: Pricing::toBaseQuantity($pending, (float) $item->unit_factor),
+                type: 'sale_return',
+                reason: "Anulacion de {$sale->folio}",
+                variantId: $item->variant_id,
+                referenceType: 'sale',
+                referenceId: $sale->id,
+            );
+        }
+    }
+
+    /**
+     * Saca de las cuentas el dinero que habia entrado por esta venta.
+     *
+     * Sin esto la cuenta seguiria mostrando un dinero que ya no esta en
+     * el cajon, y el corte del dia no cuadraria.
+     */
+    protected function refundMoney(Sale $sale): void
+    {
+        // Lo que ya se devolvio en efectivo por notas de credito no se
+        // vuelve a sacar: ese dinero salio una vez.
+        $alreadyRefunded = (float) $sale->creditNotes()
+            ->registered()
+            ->where('type', CreditNote::REFUND)
+            ->sum('total');
+
+        foreach ($sale->payments as $payment) {
+            if ($payment->paymentMethod?->isCredit()) {
+                continue;
+            }
+
+            $received = (float) $payment->amount_primary;
+
+            // El cambio salio del mismo cajon al cobrar, asi que lo que
+            // de verdad quedo ahi fue el pago menos el cambio.
+            if ($payment->paymentMethod?->allows_change) {
+                $received -= (float) $sale->change;
+            }
+
+            $received = max(0, Pricing::round($received, 2));
+            $take = Pricing::round(max(0, $received - $alreadyRefunded), 2);
+            $alreadyRefunded = Pricing::round(max(0, $alreadyRefunded - $received), 2);
+
+            if ($take <= 0) {
+                continue;
+            }
+
+            $this->treasury->postPayment(
+                paymentMethodId: $payment->payment_method_id,
+                direction: 'out',
+                amount: $take,
+                description: "Anulacion de la venta {$sale->folio}",
+                source: 'sale',
+                sourceId: $sale->id,
+            );
+        }
+    }
+
+    /** Le quita al cliente el credito que esta venta le cargo. */
+    protected function releaseCredit(Sale $sale): void
+    {
+        if ($sale->customer_id === null) {
+            return;
+        }
+
+        $charged = (float) $sale->payments
+            ->filter(fn (SalePayment $p) => $p->paymentMethod?->isCredit())
+            ->sum('amount_primary');
+
+        // El saldo a favor que ya se le dejo por devoluciones tambien
+        // salio del mismo saldo; no se le descuenta dos veces.
+        $alreadyCredited = (float) $sale->creditNotes()
+            ->registered()
+            ->where('type', CreditNote::CREDIT)
+            ->sum('total');
+
+        $release = Pricing::round(max(0, $charged - $alreadyCredited), 2);
+
+        if ($release <= 0) {
+            return;
+        }
+
+        $customer = Customer::lockForUpdate()->find($sale->customer_id);
+
+        if ($customer === null) {
+            return;
+        }
+
+        $customer->update([
+            'balance' => Pricing::round($customer->balance - $release, 2),
+        ]);
     }
 
     // =========================================================
