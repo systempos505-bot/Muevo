@@ -58,6 +58,6 @@ class Expense extends Model
 
     public function scopeRegistered($query)
     {
-        return $query->where('status', 'registered');
+        return $query->where($query->qualifyColumn('status'), 'registered');
     }
 }

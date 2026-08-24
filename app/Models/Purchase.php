@@ -85,6 +85,6 @@ class Purchase extends Model
 
     public function scopeReceived($query)
     {
-        return $query->where('status', 'received');
+        return $query->where($query->qualifyColumn('status'), 'received');
     }
 }

@@ -3,6 +3,7 @@
 use App\Models\Product;
 use App\Models\Unit;
 use App\Services\InventoryManager;
+use App\Support\Navigation;
 
 /**
  * Carga cada pantalla por su ruta real.
@@ -64,6 +65,10 @@ it('carga todas las pantallas con sesion iniciada', function () {
         route('customers'),
         route('accounts'),
         route('expenses'),
+        route('reports'),
+        route('reports', ['tab' => 'ventas']),
+        route('reports', ['tab' => 'productos']),
+        route('reports', ['tab' => 'inventario']),
     ];
 
     foreach ($routes as $url) {
@@ -89,6 +94,7 @@ it('muestra los botones de accion a quien tiene el permiso', function () {
     $this->get(route('catalog.brands'))->assertSee('+ Marca');
     $this->get(route('catalog.units'))->assertSee('+ Unidad');
     $this->get(route('catalog.price-lists'))->assertSee('+ Lista');
+    $this->get(route('reports'))->assertSee('Exportar CSV');
 });
 
 it('esconde los botones de accion a quien no tiene el permiso', function () {
@@ -98,6 +104,23 @@ it('esconde los botones de accion a quien no tiene el permiso', function () {
     $this->get(route('catalog.categories'))
         ->assertOk()
         ->assertDontSee('+ Categoria');
+});
+
+it('deja alcanzable en celular lo que no cabe en la barra de abajo', function () {
+    actingAsTenant();
+
+    // En la barra inferior caben cinco lugares y el ultimo lo ocupa
+    // "Mas". Sin ese menu habria pantallas a las que desde un celular
+    // simplemente no se puede llegar.
+    expect(Navigation::items(primary: true))->toHaveCount(4);
+
+    $html = $this->get(route('dashboard'))->assertOk()->getContent();
+
+    expect($html)->toContain('Mas');
+
+    foreach (Navigation::items() as $item) {
+        expect($html)->toContain($item['url']);
+    }
 });
 
 it('cierra la sesion y devuelve al login', function () {

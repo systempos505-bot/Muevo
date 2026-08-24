@@ -27,7 +27,7 @@ Pensado para farmacias, tiendas de ropa, zapaterías, ferreterías y supermercad
 | Cuentas de pago y tesorería | ✅ Listo |
 | Gastos | ✅ Listo |
 | Promociones | ⬜ Pendiente |
-| Reportes | ⬜ Pendiente |
+| Reportes y exportación a CSV | ✅ Listo |
 | Panel de superusuario | ⬜ Pendiente |
 
 ---
@@ -96,6 +96,7 @@ app/
     CustomerAccount.php     Crédito, abonos y estado de cuenta
     Treasury.php            Único punto por el que se mueve el dinero
     ExpenseRegistrar.php    Gastos y su efecto en las cuentas
+    Reports.php             Consultas agregadas de los reportes
     TenantProvisioner.php   Deja lista una empresa nueva
   Support/
     Tenancy.php             Empresa activa durante la petición

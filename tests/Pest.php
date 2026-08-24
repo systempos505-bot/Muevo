@@ -5,6 +5,7 @@ use App\Models\User;
 use App\Services\TenantProvisioner;
 use App\Support\Tenancy;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Features\SupportTesting\Testable;
 use Tests\TestCase;
 
 /*
@@ -47,6 +48,17 @@ function makeTenant(string $businessType = 'general', string $email = 'dueno@neg
     Tenancy::set($tenant->id);
 
     return ['tenant' => $tenant, 'user' => $user, 'setup' => $setup];
+}
+
+/**
+ * Contenido del archivo que un componente mando a descargar.
+ *
+ * Livewire no entrega el archivo: lo devuelve codificado dentro de la
+ * respuesta, asi que para revisar lo que se exporto hay que decodificarlo.
+ */
+function downloadedContent(Testable $component): string
+{
+    return base64_decode((string) data_get($component->effects, 'download.content'));
 }
 
 /** Crea una empresa y deja su administrador con la sesion iniciada. */

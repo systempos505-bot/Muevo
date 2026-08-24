@@ -68,24 +68,81 @@
     </div>
 
     {{-- Barra inferior: solo en celular y tablet --}}
-    <nav class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-slate-200
-                pb-[env(safe-area-inset-bottom)]">
-        {{-- Reparto flexible: los modulos aun no construidos no dejan
-             huecos ni empujan los botones hacia un lado. --}}
-        <div class="flex">
-            @foreach (\App\Support\Navigation::items(primary: true) as $item)
-                <a href="{{ $item['url'] }}" wire:navigate
-                   @class([
-                       'flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition',
-                       'text-indigo-600' => $item['active'],
-                       'text-slate-500' => ! $item['active'],
-                   ])>
-                    <span class="text-xl leading-none">{{ $item['icon'] }}</span>
-                    {{ $item['label'] }}
-                </a>
-            @endforeach
+    @php
+        $primaryItems = \App\Support\Navigation::items(primary: true);
+        $allItems = \App\Support\Navigation::items();
+        // Lo que no cabe abajo: si no se pudiera llegar aqui, en celular
+        // habria pantallas del sistema simplemente inalcanzables.
+        $moreItems = collect($allItems)
+            ->whereNotIn('label', collect($primaryItems)->pluck('label'))
+            ->values();
+    @endphp
+
+    <div x-data="{ more: false }" class="lg:hidden">
+        {{-- Menu de lo que no cabe en la barra --}}
+        <div x-show="more" x-cloak
+             x-transition:enter="transition ease-out duration-150"
+             x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-100"
+             x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+             class="fixed inset-0 z-40 bg-slate-900/40" x-on:click="more = false"></div>
+
+        <div x-show="more" x-cloak
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="translate-y-full" x-transition:enter-end="translate-y-0"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="translate-y-0" x-transition:leave-end="translate-y-full"
+             class="fixed bottom-0 inset-x-0 z-50 bg-white rounded-t-2xl border-t border-slate-200
+                    pb-[calc(env(safe-area-inset-bottom)+1rem)] max-h-[75vh] overflow-y-auto">
+            <div class="flex justify-center py-3">
+                <span class="w-10 h-1 rounded-full bg-slate-300"></span>
+            </div>
+            <div class="grid grid-cols-3 gap-1 px-3 pb-2">
+                @foreach ($moreItems as $item)
+                    <a href="{{ $item['url'] }}" wire:navigate x-on:click="more = false"
+                       @class([
+                           'flex flex-col items-center gap-1 py-4 rounded-xl text-xs font-medium transition',
+                           'bg-indigo-50 text-indigo-600' => $item['active'],
+                           'text-slate-600 hover:bg-slate-50' => ! $item['active'],
+                       ])>
+                        <span class="text-2xl leading-none">{{ $item['icon'] }}</span>
+                        {{ $item['label'] }}
+                    </a>
+                @endforeach
+            </div>
         </div>
-    </nav>
+
+        <nav class="fixed bottom-0 inset-x-0 z-30 bg-white border-t border-slate-200
+                    pb-[env(safe-area-inset-bottom)]">
+            {{-- Reparto flexible: los modulos aun no construidos no dejan
+                 huecos ni empujan los botones hacia un lado. --}}
+            <div class="flex">
+                @foreach ($primaryItems as $item)
+                    <a href="{{ $item['url'] }}" wire:navigate
+                       @class([
+                           'flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition',
+                           'text-indigo-600' => $item['active'],
+                           'text-slate-500' => ! $item['active'],
+                       ])>
+                        <span class="text-xl leading-none">{{ $item['icon'] }}</span>
+                        {{ $item['label'] }}
+                    </a>
+                @endforeach
+
+                @if ($moreItems->isNotEmpty())
+                    <button type="button" x-on:click="more = ! more"
+                            @class([
+                                'flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition',
+                                'text-indigo-600' => collect($moreItems)->contains('active', true),
+                                'text-slate-500' => ! collect($moreItems)->contains('active', true),
+                            ])>
+                        <span class="text-xl leading-none">⋯</span>
+                        Mas
+                    </button>
+                @endif
+            </div>
+        </nav>
+    </div>
 </div>
 
 {{-- Avisos breves de exito o error --}}

@@ -30,6 +30,6 @@ class Branch extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('status', 'active');
+        return $query->where($query->qualifyColumn('status'), 'active');
     }
 }

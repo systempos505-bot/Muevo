@@ -42,8 +42,9 @@ class Navigation
      * Opciones visibles para el usuario conectado.
      *
      * Se filtran por permiso, para no ofrecer una pantalla que el sistema
-     * va a negar despues. En celular solo caben cinco, asi que `primary`
-     * recorta a las mas usadas.
+     * va a negar despues. En celular caben cinco botones y el ultimo lo
+     * ocupa "Mas", asi que `primary` recorta a las cuatro mas usadas y el
+     * resto se alcanza desde ese menu.
      *
      * @return array<int, array{label: string, icon: string, url: string, active: bool}>
      */
@@ -59,7 +60,7 @@ class Navigation
             ->filter(fn (array $item) => $item['permission'] === null || $user->can($item['permission']))
             // Una ruta de un modulo aun no construido no debe romper el menu.
             ->filter(fn (array $item) => Route::has($item['route']))
-            ->when($primary, fn ($items) => $items->where('primary', true)->take(5))
+            ->when($primary, fn ($items) => $items->where('primary', true)->take(4))
             ->map(fn (array $item) => [
                 'label' => $item['label'],
                 'icon' => $item['icon'],

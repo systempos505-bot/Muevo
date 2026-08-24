@@ -79,6 +79,6 @@ class Sale extends Model
 
     public function scopeCompleted($query)
     {
-        return $query->where('status', 'completed');
+        return $query->where($query->qualifyColumn('status'), 'completed');
     }
 }

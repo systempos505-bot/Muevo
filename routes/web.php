@@ -10,6 +10,7 @@ use App\Livewire\Partners;
 use App\Livewire\Pos;
 use App\Livewire\Products;
 use App\Livewire\Purchases;
+use App\Livewire\Reports;
 use App\Livewire\Sales;
 use Illuminate\Support\Facades\Route;
 
@@ -66,6 +67,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/cuentas', Finance\Accounts::class)->name('accounts');
     Route::get('/cuentas/{accountId}', Finance\AccountShow::class)->name('accounts.show');
     Route::get('/gastos', Finance\Expenses::class)->name('expenses');
+
+    // --- Reportes ---
+    Route::get('/reportes', Reports\Index::class)->name('reports');
 
     // --- Inventario ---
     Route::get('/inventario', Inventory\Index::class)->name('inventory');
