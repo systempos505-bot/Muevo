@@ -55,6 +55,9 @@ it('carga todas las pantallas con sesion iniciada', function () {
         route('catalog.price-lists'),
         route('inventory'),
         route('inventory.kardex', $product),
+        route('pos'),
+        route('cash'),
+        route('sales'),
     ];
 
     foreach ($routes as $url) {
@@ -69,6 +72,8 @@ it('muestra los botones de accion a quien tiene el permiso', function () {
     actingAsTenant();
 
     $this->get(route('products'))->assertSee('+ Nuevo');
+    $this->get(route('pos'))->assertSee('Cobrar');
+    $this->get(route('cash'))->assertSee('Abrir caja');
     $this->get(route('catalog.categories'))->assertSee('+ Categoria');
     $this->get(route('catalog.brands'))->assertSee('+ Marca');
     $this->get(route('catalog.units'))->assertSee('+ Unidad');

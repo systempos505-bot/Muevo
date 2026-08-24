@@ -5,7 +5,9 @@ use App\Livewire\Auth\Register;
 use App\Livewire\Catalog;
 use App\Livewire\Dashboard;
 use App\Livewire\Inventory;
+use App\Livewire\Pos;
 use App\Livewire\Products;
+use App\Livewire\Sales;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/panel');
@@ -38,6 +40,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/unidades', Catalog\Units::class)->name('units');
         Route::get('/listas-de-precios', Catalog\PriceLists::class)->name('price-lists');
     });
+
+    // --- Punto de venta ---
+    Route::get('/vender', Pos\Register::class)->name('pos');
+    Route::get('/caja', Pos\CashDrawer::class)->name('cash');
+
+    // --- Ventas ---
+    Route::get('/ventas', Sales\Index::class)->name('sales');
+    Route::get('/ventas/{saleId}', Sales\Show::class)->name('sales.show');
 
     // --- Inventario ---
     Route::get('/inventario', Inventory\Index::class)->name('inventory');

@@ -213,6 +213,92 @@ class InventoryManager
     }
 
     /**
+     * Descuenta una cantidad repartiendola entre los lotes disponibles,
+     * empezando por el que vence antes (FEFO).
+     *
+     * Es el orden correcto en farmacia y supermercado: lo que esta mas
+     * cerca de vencer tiene que salir primero. El cajero no elige nada.
+     *
+     * Si los lotes no alcanzan, el resto se descuenta sin lote en vez de
+     * rechazar la venta: en el mostrador es peor no poder cobrar que
+     * quedar con un faltante marcado para revisar.
+     *
+     * @return array<int, array{lot: ProductLot, quantity: float}> lo tomado de cada lote
+     */
+    public function consumeFefo(
+        Product $product,
+        string $branchId,
+        float $quantity,
+        string $type = 'sale',
+        ?string $variantId = null,
+        ?string $referenceType = null,
+        ?string $referenceId = null,
+        ?string $reason = null,
+    ): array {
+        if ($quantity <= 0) {
+            throw new InvalidArgumentException('La cantidad a descontar debe ser mayor que cero.');
+        }
+
+        return DB::transaction(function () use (
+            $product, $branchId, $quantity, $type, $variantId, $referenceType, $referenceId, $reason
+        ) {
+            $pending = $quantity;
+            $used = [];
+
+            $lots = ProductLot::where('product_id', $product->id)
+                ->where('branch_id', $branchId)
+                ->where('variant_id', $variantId)
+                ->sellable()
+                ->fefo()
+                ->lockForUpdate()
+                ->get();
+
+            foreach ($lots as $lot) {
+                if ($pending <= 0) {
+                    break;
+                }
+
+                // Un lote vencido o dentro de la ventana de bloqueo se salta.
+                if ($lot->isBlockedForSale()) {
+                    continue;
+                }
+
+                $take = min($pending, (float) $lot->quantity);
+
+                $this->move(
+                    product: $product,
+                    branchId: $branchId,
+                    quantity: -$take,
+                    type: $type,
+                    reason: $reason,
+                    variantId: $variantId,
+                    lot: $lot,
+                    referenceType: $referenceType,
+                    referenceId: $referenceId,
+                );
+
+                $used[] = ['lot' => $lot, 'quantity' => $take];
+                $pending = Pricing::round($pending - $take, 3);
+            }
+
+            if ($pending > 0) {
+                $this->move(
+                    product: $product,
+                    branchId: $branchId,
+                    quantity: -$pending,
+                    type: $type,
+                    reason: $reason ?? 'Sin lote disponible',
+                    variantId: $variantId,
+                    referenceType: $referenceType,
+                    referenceId: $referenceId,
+                );
+            }
+
+            return $used;
+        });
+    }
+
+    /**
      * Costo promedio ponderado tras una entrada.
      *
      * Con existencia negativa el promedio anterior no significa nada

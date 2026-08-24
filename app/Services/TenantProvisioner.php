@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Currency;
 use App\Models\CustomerType;
 use App\Models\DocumentSeries;
+use App\Models\PaymentMethod;
 use App\Models\PriceList;
 use App\Models\Role;
 use App\Models\Tax;
@@ -74,6 +75,17 @@ class TenantProvisioner
     /** Listas de precios iniciales. La primera es la de mostrador. */
     protected const PRICE_LISTS = ['Publico', 'Mayoreo', 'Distribuidor'];
 
+    /**
+     * Formas de pago iniciales.
+     * [codigo, nombre, tipo, entra al cajon, permite cambio]
+     */
+    protected const PAYMENT_METHODS = [
+        ['EFE', 'Efectivo', 'cash', true, true],
+        ['TAR', 'Tarjeta', 'card', false, false],
+        ['TRA', 'Transferencia', 'transfer', false, false],
+        ['CRE', 'Credito', 'credit', false, false],
+    ];
+
     /** Permisos de cada rol de sistema. */
     public const ROLES = [
         [
@@ -92,6 +104,7 @@ class TenantProvisioner
                 'customers.create' => true,
                 'cash.open' => true,
                 'cash.close' => true,
+                'inventory.view' => true,
             ],
         ],
         [
@@ -144,6 +157,7 @@ class TenantProvisioner
             $this->createTax($taxRate);
             $units = $this->createUnits();
             $priceLists = $this->createPriceLists();
+            $this->createPaymentMethods();
             $this->createCategories($tenant->business_type);
 
             CustomerType::create([
@@ -246,6 +260,20 @@ class TenantProvisioner
         }
 
         return $lists;
+    }
+
+    protected function createPaymentMethods(): void
+    {
+        foreach (self::PAYMENT_METHODS as $position => [$code, $name, $type, $drawer, $change]) {
+            PaymentMethod::create([
+                'code' => $code,
+                'name' => $name,
+                'type' => $type,
+                'affects_drawer' => $drawer,
+                'allows_change' => $change,
+                'position' => $position,
+            ]);
+        }
     }
 
     protected function createCategories(string $businessType): void

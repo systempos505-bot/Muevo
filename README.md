@@ -19,9 +19,10 @@ Pensado para farmacias, tiendas de ropa, zapaterías, ferreterías y supermercad
 | Inventario: existencias, kardex y ajustes | ✅ Listo |
 | Inventario: lotes, vencimientos y series | ✅ Esquema listo |
 | Clientes y proveedores | ✅ Esquema listo |
-| Punto de venta | ⬜ Pendiente |
+| Punto de venta | ✅ Listo |
+| Caja y turnos | ✅ Listo |
+| Ventas: historial, ticket y anulación | ✅ Listo |
 | Compras | ⬜ Pendiente |
-| Caja y turnos | ⬜ Pendiente |
 | Cuentas de pago y gastos | ⬜ Pendiente |
 | Promociones | ⬜ Pendiente |
 | Reportes | ⬜ Pendiente |
@@ -76,12 +77,16 @@ app/
     Products/         Listado y formulario de productos
     Catalog/          Categorías, marcas, unidades y listas de precios
     Inventory/        Existencias, ajustes y kardex
+    Pos/              Pantalla de venta y caja
+    Sales/            Historial y ticket
   Models/             Modelos Eloquent
     Concerns/
       BelongsToTenant.php   Aísla los datos por empresa
   Services/
     Pricing.php             Impuesto, margen y precio sugerido
     InventoryManager.php    Único punto por el que se mueve el stock
+    SaleRegistrar.php       Registra la venta completa
+    CashRegister.php        Apertura, movimientos y corte de caja
     TenantProvisioner.php   Deja lista una empresa nueva
   Support/
     Tenancy.php             Empresa activa durante la petición
@@ -95,8 +100,8 @@ resources/views/
   livewire/           Vistas de cada pantalla
 tests/
   Unit/               Motor de precios
-  Feature/            Registro, sesión, productos, catálogo, inventario
-                      y aislamiento entre empresas
+  Feature/            Registro, sesión, productos, catálogo, inventario,
+                      ventas, caja y aislamiento entre empresas
 ```
 
 ---
@@ -143,6 +148,34 @@ que dos ajustes simultáneos no escriban saldos inconsistentes.
 **El costo promedio solo se mueve al entrar mercancía.** En una entrada el
 costo es lo que se está pagando ahora; en una salida, el promedio acumulado.
 Una salida no cambia lo que costó lo que ya estaba guardado.
+
+**Una venta se registra entera o no se registra.** Folio, líneas, pagos,
+descuento de inventario y saldo del cliente ocurren en una sola transacción.
+Una venta a medias sería peor que una venta rechazada, porque descuadraría el
+inventario o el dinero sin que nadie se entere.
+
+**La línea de venta guarda copia de todo.** Nombre, precio y costo tal como
+estaban al vender. Un ticket de hace seis meses se reimprime igual aunque el
+producto haya cambiado de precio o ya no exista, y la utilidad de esa venta no
+se mueve cuando sube el costo.
+
+**Con lotes, la venta consume por FEFO.** Sale primero lo que vence antes, y un
+lote vencido o dentro de su ventana de bloqueo se salta solo. El cajero no
+elige nada. Si los lotes no alcanzan, la venta se acepta igual y el faltante
+queda visible: en el mostrador es peor no poder cobrar que quedar con un
+número negativo marcado para revisar.
+
+**El cambio solo se calcula sobre lo que se puede devolver.** Pagar de más con
+tarjeta no genera efectivo en el cajón, así que no genera cambio.
+
+**Nadie vende sin turno de caja abierto.** Es lo que permite cuadrar el
+efectivo al final del día. Una caja no puede tener dos turnos abiertos: si no,
+dos cajeros cuadrarían contra el mismo dinero y ninguno sabría de quién es la
+diferencia. La diferencia del corte se guarda tal cual — si falta dinero, el
+sistema lo dice, no lo tapa.
+
+**Anular no borra.** La venta queda marcada, la mercancía vuelve al inventario
+con su propio movimiento y el crédito se le devuelve al cliente.
 
 **Las cabeceras de pantalla van dentro del componente Livewire.** Si vivieran
 en el layout quedarían fuera de su elemento raíz y los botones con `wire:click`
