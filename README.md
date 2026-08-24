@@ -1,108 +1,125 @@
-# Muevo POS - Sistema punto de venta SaaS
+# Muevo POS
 
-Sistema punto de venta completo, offline-first, multi-tenant y responsive.
+Sistema de facturación y punto de venta SaaS, multiempresa y multisucursal.
+Pensado para farmacias, tiendas de ropa, zapaterías, ferreterías y supermercados.
 
-## Features
+**Stack:** Laravel 13 · Livewire · Tailwind 4 · MySQL
 
-- ✅ Multi-tenant con aislamiento de datos
-- ✅ Offline-first (funciona sin internet)
-- ✅ Responsive (celular, tablet, desktop)
-- ✅ PWA instalable
-- ✅ Autenticación JWT + PIN para caja
-- ✅ Múltiples precios por producto
+---
 
-## Tech Stack
+## Estado actual
 
-- **Frontend**: React + TypeScript + Vite + Tailwind CSS
-- **Backend**: Node.js + Fastify + TypeScript
-- **Database**: PostgreSQL con Row Level Security
-- **State**: Zustand + Dexie (IndexedDB)
-- **Deploy**: Docker
+| Módulo | Estado |
+|---|---|
+| Cimientos (empresas, sucursales, cajas, roles, usuarios) | ✅ Listo |
+| Configuración (monedas, impuestos, numeración) | ✅ Esquema listo |
+| Catálogo de productos | ✅ Listo |
+| Inventario (existencias, kardex, lotes, series) | ✅ Esquema listo |
+| Clientes y proveedores | ✅ Esquema listo |
+| Punto de venta | ⬜ Pendiente |
+| Compras | ⬜ Pendiente |
+| Caja y turnos | ⬜ Pendiente |
+| Cuentas de pago y gastos | ⬜ Pendiente |
+| Promociones | ⬜ Pendiente |
+| Reportes | ⬜ Pendiente |
+| Panel de superusuario | ⬜ Pendiente |
 
-## Setup
+---
 
-### 1. Prerequisites
+## Instalación
 
-- Node.js 18+
-- PostgreSQL 12+
-
-### 2. Install dependencies
+Necesitas PHP 8.3+, Composer, Node 20+ y MySQL 8 (o MariaDB 10.6+).
 
 ```bash
+# 1. Dependencias
+composer install
 npm install
-cd apps/web && npm install && cd ../..
-```
 
-### 3. Database setup
-
-```bash
-# Create database
-createdb muevo
-
-# Load schema
-psql muevo < src/db/schema.sql
-```
-
-### 4. Environment
-
-```bash
+# 2. Configuración
 cp .env.example .env
-# Edit .env with your database URL
+php artisan key:generate
+
+# 3. Base de datos
+#    Crea la base y ajusta DB_DATABASE, DB_USERNAME y DB_PASSWORD en .env
+mysql -u root -e "CREATE DATABASE muevo CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+php artisan migrate
+
+# 4. Arrancar
+php artisan serve      # en una terminal
+npm run dev            # en otra
 ```
 
-### 5. Run
+Abre `http://localhost:8000` y registra tu negocio.
+
+---
+
+## Pruebas
 
 ```bash
-# Terminal 1: Start server (port 3000)
-npm run dev:server
-
-# Terminal 2: Start web (port 5173)
-cd apps/web && npm run dev
+vendor/bin/pest
 ```
 
-Open http://localhost:5173
+Corren contra SQLite en memoria, así que no tocan tu base de trabajo.
 
-## Project Structure
+---
+
+## Cómo está organizado
 
 ```
-muevo/
-├── src/
-│   ├── server/        # Fastify server
-│   ├── db/            # Database schema & migrations
-│   └── types/         # Shared TypeScript types
-├── apps/web/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── store/
-│   │   └── App.tsx
-│   └── index.html
-└── package.json
+app/
+  Livewire/           Pantallas (cada una es un componente)
+    Page.php          Base con el menú y los avisos
+    Auth/             Registro e inicio de sesión
+    Products/         Listado y formulario de productos
+  Models/             Modelos Eloquent
+    Concerns/
+      BelongsToTenant.php   Aísla los datos por empresa
+  Services/
+    Pricing.php             Impuesto, margen y precio sugerido
+    TenantProvisioner.php   Deja lista una empresa nueva
+  Support/
+    Tenancy.php             Empresa activa durante la petición
+database/migrations/  Esquema completo
+resources/views/
+  layouts/            app (con sesión) y guest (sin sesión)
+  components/         Botones, campos y tarjetas reutilizables
+  livewire/           Vistas de cada pantalla
+tests/
+  Unit/               Motor de precios
+  Feature/            Registro, productos y aislamiento entre empresas
 ```
 
-## Development
+---
 
-### Create a test account
+## Decisiones que conviene conocer
 
-On signup page:
-- Name: Test Store
-- Email: test@example.com
-- Password: password123
-- Type: Retail
+**El aislamiento entre empresas vive en el código.** MySQL no tiene
+Row Level Security, así que lo resuelve el trait `BelongsToTenant`: filtra
+toda consulta por `tenant_id` y lo rellena solo al crear. Si no hay empresa
+activa, las consultas devuelven vacío en lugar de devolver todo — ante un
+error de configuración es preferible una pantalla en blanco a mostrarle a un
+negocio los datos de otro. Hay diez pruebas cuidando exactamente esto.
 
-Login with same credentials.
+**El inventario se guarda siempre en la unidad base.** Un producto se puede
+vender por unidad, por docena o por caja, y cada presentación tiene su factor
+de equivalencia. Vender una caja de 24 descuenta 24, no 1. Así nunca hay dos
+números de existencia que se puedan desincronizar.
 
-## Next Steps
+**Neto + impuesto siempre da el bruto, al centavo.** El desglose se calcula a
+partir de lo que el cliente realmente paga, no al revés. El impuesto absorbe
+la diferencia de redondeo, para que un comprobante nunca quede descuadrado.
 
-- [x] Module 1: Foundation (auth, login, dashboard)
-- [ ] Module 2: Products (with 10+ price tiers)
-- [ ] Module 3: Inventory & Kardex
-- [ ] Module 4: Offline-first engine
-- [ ] Module 5: POS screen
-- [ ] Module 6: Cash & shifts
-- [ ] Module 7: Customers
-- [ ] Module 8: Reports
-- [ ] Module 9: SaaS panel
+**Los precios son listas del negocio, no campos sueltos.** Público, Mayoreo,
+Distribuidor y las que hagan falta, hasta diez. Una lista puede trabajar por
+margen y recalcularse sola cuando cambia el costo, salvo que alguien haya
+capturado un precio a mano. Además cada precio se puede activar a partir de
+cierta cantidad, que es como se arman los precios por volumen.
 
-## License
+**El kardex es solo de escritura.** Ningún movimiento se edita ni se borra:
+corregir un error se hace con un movimiento nuevo. Es lo que permite explicar
+después cómo se llegó a la existencia actual.
 
-MIT
+**El giro define los valores por defecto.** Una farmacia crea productos con
+lotes y vencimiento ya activados; una tienda de ropa, con variantes. Un solo
+motor por debajo, pero cada producto activa nada más lo que usa, para que el
+formulario no tenga cuarenta casillas.

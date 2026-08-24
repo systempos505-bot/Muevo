@@ -1,42 +1,19 @@
 {
-  "name": "muevo-pos",
-  "version": "0.1.0",
-  "description": "POS SaaS multi-tenant, offline-first, retail",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "dev": "npm run dev:server & npm run dev:web",
-    "dev:server": "node --loader tsx --watch src/server/index.ts",
-    "dev:web": "cd apps/web && vite",
-    "build": "npm run build:server && npm run build:web",
-    "build:server": "tsc -p tsconfig.server.json",
-    "build:web": "cd apps/web && vite build",
-    "db:migrate": "tsx src/db/migrations/runner.ts",
-    "db:seed": "tsx src/db/seed.ts",
-    "type-check": "tsc --noEmit",
-    "lint": "eslint src apps"
-  },
-  "dependencies": {
-    "fastify": "^4.25.2",
-    "pg": "^8.11.3",
-    "jwt-simple": "^0.5.6",
-    "uuid": "^9.0.1",
-    "dexie": "^4.0.3",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "zustand": "^4.4.7",
-    "axios": "^1.6.7"
-  },
-  "devDependencies": {
-    "@types/node": "^20.10.6",
-    "@types/react": "^18.2.45",
-    "@types/react-dom": "^18.2.18",
-    "@types/uuid": "^9.0.7",
-    "typescript": "^5.3.3",
-    "tsx": "^4.7.0",
-    "vite": "^5.0.8",
-    "tailwindcss": "^3.4.1",
-    "autoprefixer": "^10.4.16",
-    "postcss": "^8.4.32"
-  }
+    "$schema": "https://www.schemastore.org/package.json",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "vite build",
+        "dev": "vite"
+    },
+    "devDependencies": {
+        "@tailwindcss/vite": "^4.0.0",
+        "concurrently": "^10.0.3",
+        "laravel-vite-plugin": "^3.1",
+        "tailwindcss": "^4.0.0",
+        "vite": "^8.0.0"
+    },
+    "optionalDependencies": {
+        "@laravel/multiplex": "^0.4.1"
+    }
 }
