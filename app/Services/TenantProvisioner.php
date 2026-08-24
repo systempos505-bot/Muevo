@@ -17,6 +17,7 @@ use App\Models\Tenant;
 use App\Models\Terminal;
 use App\Models\Unit;
 use App\Support\Tenancy;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Deja lista una empresa recien registrada.
@@ -191,20 +192,11 @@ class TenantProvisioner
                 'is_default' => true,
             ]);
 
-            $branch = Branch::create([
-                'code' => 'PRIN',
-                'name' => 'Sucursal Principal',
-                'is_default' => true,
-            ]);
-
-            $terminal = Terminal::create([
-                'branch_id' => $branch->id,
-                'code' => 'CAJA1',
-                'name' => 'Caja 1',
-                'folio_prefix' => 'C1',
-            ]);
-
-            $this->createDocumentSeries($branch);
+            [$branch, $terminal] = $this->provisionBranch(
+                code: 'PRIN',
+                name: 'Sucursal Principal',
+                isDefault: true,
+            );
 
             return [
                 'branch' => $branch,
@@ -346,6 +338,46 @@ class TenantProvisioner
         'expense' => 'G-',
         'shift' => 'T-',
     ];
+
+    /**
+     * Deja una sucursal lista para operar.
+     *
+     * Una sucursal sin caja ni series de folios existe pero no sirve: no
+     * se puede abrir turno ahi, y sin turno no se puede vender. Por eso
+     * las tres cosas se crean juntas, aqui y no en cada pantalla.
+     *
+     * @return array{0: Branch, 1: Terminal}
+     */
+    public function provisionBranch(
+        string $code,
+        string $name,
+        bool $isDefault = false,
+        ?string $address = null,
+        ?string $phone = null,
+    ): array {
+        return DB::transaction(function () use ($code, $name, $isDefault, $address, $phone) {
+            $branch = Branch::create([
+                'code' => $code,
+                'name' => $name,
+                'address' => $address,
+                'phone' => $phone,
+                'is_default' => $isDefault,
+            ]);
+
+            // El prefijo de folios sale del codigo de la sucursal: asi dos
+            // cajas de tiendas distintas nunca generan el mismo numero.
+            $terminal = Terminal::create([
+                'branch_id' => $branch->id,
+                'code' => mb_substr($code, 0, 4).'-CAJA1',
+                'name' => 'Caja 1',
+                'folio_prefix' => mb_substr($code, 0, 6).'1',
+            ]);
+
+            $this->createDocumentSeries($branch);
+
+            return [$branch, $terminal];
+        });
+    }
 
     protected function createDocumentSeries(Branch $branch): void
     {

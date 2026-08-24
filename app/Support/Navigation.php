@@ -26,6 +26,7 @@ class Navigation
             ['label' => 'Vender',     'icon' => '⊞', 'route' => 'pos',                'match' => 'pos',       'permission' => 'sales.create',   'primary' => true],
             ['label' => 'Productos',  'icon' => '▤', 'route' => 'products',           'match' => 'products',  'permission' => 'products.view',  'primary' => true],
             ['label' => 'Inventario', 'icon' => '▣', 'route' => 'inventory',          'match' => 'inventory', 'permission' => 'inventory.view', 'primary' => false],
+            ['label' => 'Traspasos',  'icon' => '⇄', 'route' => 'transfers',          'match' => 'transfers', 'permission' => 'inventory.view', 'primary' => false],
             ['label' => 'Ventas',     'icon' => '◫', 'route' => 'sales',              'match' => 'sales',     'permission' => 'sales.view',     'primary' => true],
             ['label' => 'Caja',       'icon' => '▦', 'route' => 'cash',               'match' => 'cash',      'permission' => 'cash.open',      'primary' => true],
             ['label' => 'Devoluciones', 'icon' => '↩', 'route' => 'returns',          'match' => 'returns',   'permission' => 'sales.view',     'primary' => false],
@@ -37,6 +38,7 @@ class Navigation
             ['label' => 'Clientes',   'icon' => '☺', 'route' => 'customers',          'match' => 'customers', 'permission' => 'customers.view', 'primary' => false],
             ['label' => 'Promociones', 'icon' => '✽', 'route' => 'promotions',        'match' => 'promotions', 'permission' => 'promotions.view', 'primary' => false],
             ['label' => 'Reportes',   'icon' => '◔', 'route' => 'reports',            'match' => 'reports',   'permission' => 'reports.view',   'primary' => true],
+            ['label' => 'Sucursales', 'icon' => '⊟', 'route' => 'branches',           'match' => 'branches',  'permission' => 'settings.view',  'primary' => false],
         ];
     }
 

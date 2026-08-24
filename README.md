@@ -12,11 +12,13 @@ Pensado para farmacias, tiendas de ropa, zapaterías, ferreterías y supermercad
 | Módulo | Estado |
 |---|---|
 | Cimientos (empresas, sucursales, cajas, roles, usuarios) | ✅ Listo |
+| Sucursales: alta, caja y series de folios | ✅ Listo |
 | Configuración (monedas, impuestos, numeración) | ✅ Esquema listo |
 | Catálogo de productos | ✅ Listo |
 | Categorías, marcas y unidades | ✅ Listo |
 | Listas de precios | ✅ Listo |
 | Inventario: existencias, kardex y ajustes | ✅ Listo |
+| Traspasos entre sucursales | ✅ Listo |
 | Inventario: lotes, vencimientos y series | ✅ Esquema listo |
 | Clientes y cuentas por cobrar | ✅ Listo |
 | Punto de venta | ✅ Listo |
@@ -99,6 +101,7 @@ app/
     ExpenseRegistrar.php    Gastos y su efecto en las cuentas
     PromotionEngine.php     Descuento que hace cada promocion
     ReturnRegistrar.php     Devoluciones y notas de credito
+    TransferManager.php     Traspasos entre sucursales
     Reports.php             Consultas agregadas de los reportes
     TenantProvisioner.php   Deja lista una empresa nueva
   Support/

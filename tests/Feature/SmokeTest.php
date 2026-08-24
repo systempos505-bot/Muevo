@@ -65,6 +65,8 @@ it('carga todas las pantallas con sesion iniciada', function () {
         route('customers'),
         route('accounts'),
         route('expenses'),
+        route('branches'),
+        route('transfers'),
         route('returns'),
         route('promotions'),
         route('reports'),

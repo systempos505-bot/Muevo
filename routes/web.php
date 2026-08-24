@@ -14,6 +14,8 @@ use App\Livewire\Purchases;
 use App\Livewire\Reports;
 use App\Livewire\Returns;
 use App\Livewire\Sales;
+use App\Livewire\Settings;
+use App\Livewire\Transfers;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/panel');
@@ -83,4 +85,11 @@ Route::middleware('auth')->group(function () {
     // --- Inventario ---
     Route::get('/inventario', Inventory\Index::class)->name('inventory');
     Route::get('/inventario/{productId}/kardex', Inventory\Kardex::class)->name('inventory.kardex');
+
+    // --- Configuracion ---
+    Route::get('/sucursales', Settings\Branches::class)->name('branches');
+
+    // --- Traspasos entre sucursales ---
+    Route::get('/traspasos', Transfers\Index::class)->name('transfers');
+    Route::get('/traspasos/{transferId}', Transfers\Show::class)->name('transfers.show');
 });

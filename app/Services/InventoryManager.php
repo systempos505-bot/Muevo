@@ -34,6 +34,11 @@ class InventoryManager
      * Aplica un movimiento y devuelve la existencia resultante.
      *
      * @param  float  $quantity  positiva entra, negativa sale. En unidad base.
+     * @param  float|null  $unitCost  costo de la entrada cuando se conoce de
+     *                                otra parte. Lo usa el traspaso, que trae
+     *                                el promedio de la sucursal de origen: sin
+     *                                el, mover mercancia entre tiendas le
+     *                                cambiaria el costo al destino.
      */
     public function move(
         Product $product,
@@ -45,6 +50,7 @@ class InventoryManager
         ?ProductLot $lot = null,
         ?string $referenceType = null,
         ?string $referenceId = null,
+        ?float $unitCost = null,
     ): Inventory {
         if ($quantity == 0.0) {
             throw new InvalidArgumentException('La cantidad del movimiento no puede ser cero.');
@@ -55,7 +61,8 @@ class InventoryManager
         }
 
         return DB::transaction(function () use (
-            $product, $branchId, $quantity, $type, $reason, $variantId, $lot, $referenceType, $referenceId
+            $product, $branchId, $quantity, $type, $reason, $variantId,
+            $lot, $referenceType, $referenceId, $unitCost
         ) {
             $inventory = Inventory::where('branch_id', $branchId)
                 ->where('product_id', $product->id)
@@ -78,7 +85,7 @@ class InventoryManager
             // promedio acumulado. Usar el promedio tambien al entrar dejaria
             // el costo congelado para siempre.
             $unitCost = $quantity > 0
-                ? (float) ($lot?->cost ?? $product->cost)
+                ? (float) ($unitCost ?? $lot?->cost ?? $product->cost)
                 : (float) ($inventory->avg_cost ?: $product->cost);
 
             // El costo promedio solo se recalcula cuando entra mercancia.
