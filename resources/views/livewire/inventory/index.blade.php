@@ -1,5 +1,13 @@
 <div>
-    <x-page-header title="Inventario" subtitle="Existencias por sucursal" />
+    <x-page-header title="Inventario" subtitle="Existencias por sucursal">
+        <x-slot:actions>
+            @can('inventory.view')
+                <a href="{{ route('stock-counts') }}" wire:navigate>
+                    <x-button variant="secondary" size="sm">Inventario fisico</x-button>
+                </a>
+            @endcan
+        </x-slot:actions>
+    </x-page-header>
 
     {{-- Filtros --}}
     <div class="flex flex-col sm:flex-row gap-3 mb-4">

@@ -70,6 +70,7 @@ it('carga todas las pantallas con sesion iniciada', function () {
         route('users'),
         route('roles'),
         route('transfers'),
+        route('stock-counts'),
         route('returns'),
         route('promotions'),
         route('reports'),
@@ -107,6 +108,7 @@ it('muestra los botones de accion a quien tiene el permiso', function () {
     $this->get(route('branches'))->assertSee('+ Sucursal');
     $this->get(route('users'))->assertSee('+ Usuario');
     $this->get(route('roles'))->assertSee('+ Rol');
+    $this->get(route('stock-counts'))->assertSee('+ Conteo');
 });
 
 it('esconde los botones de accion a quien no tiene el permiso', function () {

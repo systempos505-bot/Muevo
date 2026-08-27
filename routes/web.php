@@ -86,6 +86,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/inventario', Inventory\Index::class)->name('inventory');
     Route::get('/inventario/{productId}/kardex', Inventory\Kardex::class)->name('inventory.kardex');
 
+    // --- Inventario fisico ---
+    Route::get('/conteos', Inventory\Counts\Index::class)->name('stock-counts');
+    Route::get('/conteos/{countId}', Inventory\Counts\Show::class)->name('stock-counts.show');
+
     // --- Configuracion ---
     Route::get('/negocio', Settings\Business::class)->name('business');
     Route::get('/sucursales', Settings\Branches::class)->name('branches');

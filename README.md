@@ -20,6 +20,7 @@ Pensado para farmacias, tiendas de ropa, zapaterías, ferreterías y supermercad
 | Listas de precios | ✅ Listo |
 | Inventario: existencias, kardex y ajustes | ✅ Listo |
 | Traspasos entre sucursales | ✅ Listo |
+| Inventario físico (conteos) | ✅ Listo |
 | Inventario: lotes, vencimientos y series | ✅ Esquema listo |
 | Clientes y cuentas por cobrar | ✅ Listo |
 | Punto de venta | ✅ Listo |
@@ -103,6 +104,7 @@ app/
     PromotionEngine.php     Descuento que hace cada promocion
     ReturnRegistrar.php     Devoluciones y notas de credito
     TransferManager.php     Traspasos entre sucursales
+    StockCountManager.php   Inventario fisico: contar y ajustar la diferencia
     Reports.php             Consultas agregadas de los reportes
     TenantProvisioner.php   Deja lista una empresa nueva
   Support/

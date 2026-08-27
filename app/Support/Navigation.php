@@ -27,6 +27,7 @@ class Navigation
             ['label' => 'Productos',  'icon' => '▤', 'route' => 'products',           'match' => 'products',  'permission' => 'products.view',  'primary' => true],
             ['label' => 'Inventario', 'icon' => '▣', 'route' => 'inventory',          'match' => 'inventory', 'permission' => 'inventory.view', 'primary' => false],
             ['label' => 'Traspasos',  'icon' => '⇄', 'route' => 'transfers',          'match' => 'transfers', 'permission' => 'inventory.view', 'primary' => false],
+            ['label' => 'Conteos',    'icon' => '☑', 'route' => 'stock-counts',       'match' => 'stock-counts', 'permission' => 'inventory.view', 'primary' => false],
             ['label' => 'Ventas',     'icon' => '◫', 'route' => 'sales',              'match' => 'sales',     'permission' => 'sales.view',     'primary' => true],
             ['label' => 'Caja',       'icon' => '▦', 'route' => 'cash',               'match' => 'cash',      'permission' => 'cash.open',      'primary' => true],
             ['label' => 'Devoluciones', 'icon' => '↩', 'route' => 'returns',          'match' => 'returns',   'permission' => 'sales.view',     'primary' => false],

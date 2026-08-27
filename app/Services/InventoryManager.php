@@ -132,6 +132,11 @@ class InventoryManager
      * Deja la existencia en una cantidad exacta, calculando la diferencia.
      * Es lo que hace falta al contar fisicamente: el usuario sabe cuanto
      * hay, no cuanto sobra o falta.
+     *
+     * La diferencia se calcula contra la existencia actual, no contra la
+     * que habia cuando se empezo a contar: si el conteo tomo horas y en
+     * el medio se vendio algo, aplicar contra un numero viejo pisaria esa
+     * venta o duplicaria el ajuste.
      */
     public function setQuantity(
         Product $product,
@@ -139,6 +144,8 @@ class InventoryManager
         float $countedQuantity,
         string $reason,
         ?string $variantId = null,
+        ?string $referenceType = null,
+        ?string $referenceId = null,
     ): ?Inventory {
         $current = (float) (Inventory::where('branch_id', $branchId)
             ->where('product_id', $product->id)
@@ -160,6 +167,8 @@ class InventoryManager
             type: 'count',
             reason: $reason,
             variantId: $variantId,
+            referenceType: $referenceType,
+            referenceId: $referenceId,
         );
     }
 
