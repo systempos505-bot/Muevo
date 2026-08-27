@@ -1,5 +1,6 @@
 @php
     $tabs = [
+        ['label' => 'Negocio', 'route' => 'business', 'permission' => 'settings.view'],
         ['label' => 'Sucursales', 'route' => 'branches', 'permission' => 'settings.view'],
         ['label' => 'Usuarios', 'route' => 'users', 'permission' => 'users.view'],
         ['label' => 'Roles', 'route' => 'roles', 'permission' => 'settings.view'],

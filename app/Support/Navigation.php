@@ -38,6 +38,7 @@ class Navigation
             ['label' => 'Clientes',   'icon' => '☺', 'route' => 'customers',          'match' => 'customers', 'permission' => 'customers.view', 'primary' => false],
             ['label' => 'Promociones', 'icon' => '✽', 'route' => 'promotions',        'match' => 'promotions', 'permission' => 'promotions.view', 'primary' => false],
             ['label' => 'Reportes',   'icon' => '◔', 'route' => 'reports',            'match' => 'reports',   'permission' => 'reports.view',   'primary' => true],
+            ['label' => 'Negocio',    'icon' => '⚙', 'route' => 'business',           'match' => 'business',  'permission' => 'settings.view',  'primary' => false],
             ['label' => 'Sucursales', 'icon' => '⊟', 'route' => 'branches',           'match' => 'branches',  'permission' => 'settings.view',  'primary' => false],
             ['label' => 'Usuarios',   'icon' => '☻', 'route' => 'users',              'match' => 'users',     'permission' => 'users.view',     'primary' => false],
         ];

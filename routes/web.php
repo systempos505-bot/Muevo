@@ -87,6 +87,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/inventario/{productId}/kardex', Inventory\Kardex::class)->name('inventory.kardex');
 
     // --- Configuracion ---
+    Route::get('/negocio', Settings\Business::class)->name('business');
     Route::get('/sucursales', Settings\Branches::class)->name('branches');
     Route::get('/usuarios', Settings\Users::class)->name('users');
     Route::get('/roles', Settings\Roles::class)->name('roles');
