@@ -11,6 +11,7 @@ use App\Livewire\Pos;
 use App\Livewire\Products;
 use App\Livewire\Promotions;
 use App\Livewire\Purchases;
+use App\Livewire\Quotes;
 use App\Livewire\Reports;
 use App\Livewire\Returns;
 use App\Livewire\Sales;
@@ -56,6 +57,12 @@ Route::middleware('auth')->group(function () {
     // --- Ventas ---
     Route::get('/ventas', Sales\Index::class)->name('sales');
     Route::get('/ventas/{saleId}', Sales\Show::class)->name('sales.show');
+
+    // --- Cotizaciones ---
+    Route::get('/cotizaciones', Quotes\Index::class)->name('quotes');
+    Route::get('/cotizaciones/nueva', Quotes\Form::class)->name('quotes.create');
+    Route::get('/cotizaciones/{quoteId}', Quotes\Show::class)->name('quotes.show');
+    Route::get('/cotizaciones/{quoteId}/editar', Quotes\Form::class)->name('quotes.edit');
 
     // --- Devoluciones ---
     Route::get('/devoluciones', Returns\Index::class)->name('returns');

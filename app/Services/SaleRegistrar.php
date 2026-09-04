@@ -49,6 +49,7 @@ class SaleRegistrar
         ?string $customerId = null,
         ?string $priceListId = null,
         ?string $notes = null,
+        bool $applyPromotions = true,
     ): Sale {
         if (! $shift->isOpen()) {
             throw new RuntimeException('No hay un turno de caja abierto.');
@@ -58,7 +59,7 @@ class SaleRegistrar
             throw new RuntimeException('La venta no tiene productos.');
         }
 
-        return DB::transaction(function () use ($shift, $lines, $payments, $customerId, $priceListId, $notes) {
+        return DB::transaction(function () use ($shift, $lines, $payments, $customerId, $priceListId, $notes, $applyPromotions) {
             $tenant = auth()->user()->tenant;
             $taxMode = $tenant->taxMode();
             $decimals = $tenant->price_decimals;
@@ -66,13 +67,20 @@ class SaleRegistrar
             // Las promociones se calculan aqui y no se reciben de quien
             // llama: un descuento que viene de afuera es un descuento que
             // se puede inventar.
-            $active = $this->promotions->active(
-                branchId: $shift->branch_id,
-                priceListId: $priceListId,
-                customerTypeId: $customerId
-                    ? Customer::whereKey($customerId)->value('customer_type_id')
-                    : null,
-            );
+            //
+            // Se apagan al convertir una cotizacion: ahi el precio ya se
+            // pacto con el cliente y trae adentro el descuento que se le
+            // ofrecio. Volver a aplicar la promocion encima regalaria dos
+            // veces la misma rebaja.
+            $active = $applyPromotions
+                ? $this->promotions->active(
+                    branchId: $shift->branch_id,
+                    priceListId: $priceListId,
+                    customerTypeId: $customerId
+                        ? Customer::whereKey($customerId)->value('customer_type_id')
+                        : null,
+                )
+                : collect();
 
             $prepared = $this->prepareLines($lines, $taxMode, $decimals, $active);
             $totals = $this->sumLines($prepared, $decimals);

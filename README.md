@@ -24,6 +24,7 @@ Pensado para farmacias, tiendas de ropa, zapaterías, ferreterías y supermercad
 | Inventario: lotes, vencimientos y series | ✅ Esquema listo |
 | Clientes y cuentas por cobrar | ✅ Listo |
 | Punto de venta | ✅ Listo |
+| Cotizaciones | ✅ Listo |
 | Caja y turnos | ✅ Listo |
 | Ventas: historial, ticket y anulación | ✅ Listo |
 | Devoluciones y notas de crédito | ✅ Listo |
@@ -85,6 +86,7 @@ app/
     Catalog/          Categorías, marcas, unidades y listas de precios
     Inventory/        Existencias, ajustes y kardex
     Pos/              Pantalla de venta y caja
+    Quotes/           Cotizaciones: alta, detalle y conversion
     Sales/            Historial y ticket
     Purchases/        Compras y cuentas por pagar
     Partners/         Clientes y proveedores
@@ -96,6 +98,7 @@ app/
     Pricing.php             Impuesto, margen y precio sugerido
     InventoryManager.php    Único punto por el que se mueve el stock
     SaleRegistrar.php       Registra la venta completa
+    QuoteRegistrar.php      Cotizar, responder y convertir en venta
     CashRegister.php        Apertura, movimientos y corte de caja
     PurchaseRegistrar.php   Recibe mercancía y actualiza costos
     CustomerAccount.php     Crédito, abonos y estado de cuenta
@@ -247,6 +250,24 @@ qué se le va el dinero no está obligado a llevar tesorería.
 **Un precio en cero significa "sin precio", no "gratis".** No se guarda, para
 que la caja no resuelva un cero como precio válido y deje regalar el producto.
 La pantalla del producto avisa cuando falta el precio de mostrador.
+
+**Una cotizacion es una promesa de precio, no una venta a medias.** No mueve
+inventario ni dinero: lo unico que compromete al negocio es cuanto ofrecio y
+hasta cuando. Por eso no tiene turno de caja ni pagos hasta que se convierte.
+
+**"Vencida" se calcula, no se guarda.** Un estado guardado necesitaria una tarea
+programada que lo voltee cada noche, y en hosting compartido no hay quien la
+corra: las cotizaciones se quedarian marcadas como vigentes para siempre. Se
+deduce de la fecha, que nunca miente.
+
+**Al convertir se cobra el precio pactado, no el de hoy.** Es exactamente lo que
+el cliente vino a cobrar. Por eso las promociones no se vuelven a aplicar encima:
+el precio cotizado ya trae adentro el descuento que se le ofrecio, y aplicarlas
+otra vez regalaria dos veces la misma rebaja.
+
+**Una cotizacion vencida no se convierte sola.** El precio ya no esta
+comprometido, asi que hay que extender la vigencia a mano. Dejarla pasar seria
+vender al precio del mes pasado sin que nadie lo haya decidido.
 
 **Las cabeceras de pantalla van dentro del componente Livewire.** Si vivieran
 en el layout quedarían fuera de su elemento raíz y los botones con `wire:click`

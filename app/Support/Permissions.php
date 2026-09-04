@@ -39,6 +39,8 @@ class Permissions
                     'sales.discount' => 'Dar descuentos a mano',
                     'sales.return' => 'Registrar devoluciones',
                     'sales.void' => 'Anular ventas',
+                    'quotes.view' => 'Ver cotizaciones',
+                    'quotes.manage' => 'Crear y responder cotizaciones',
                     'cash.open' => 'Abrir la caja',
                     'cash.close' => 'Hacer el corte de caja',
                 ],

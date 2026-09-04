@@ -29,6 +29,7 @@ class Navigation
             ['label' => 'Traspasos',  'icon' => '⇄', 'route' => 'transfers',          'match' => 'transfers', 'permission' => 'inventory.view', 'primary' => false],
             ['label' => 'Conteos',    'icon' => '☑', 'route' => 'stock-counts',       'match' => 'stock-counts', 'permission' => 'inventory.view', 'primary' => false],
             ['label' => 'Ventas',     'icon' => '◫', 'route' => 'sales',              'match' => 'sales',     'permission' => 'sales.view',     'primary' => true],
+            ['label' => 'Cotizaciones', 'icon' => '✎', 'route' => 'quotes',           'match' => 'quotes',    'permission' => 'quotes.view',    'primary' => false],
             ['label' => 'Caja',       'icon' => '▦', 'route' => 'cash',               'match' => 'cash',      'permission' => 'cash.open',      'primary' => true],
             ['label' => 'Devoluciones', 'icon' => '↩', 'route' => 'returns',          'match' => 'returns',   'permission' => 'sales.view',     'primary' => false],
             ['label' => 'Compras',    'icon' => '▽', 'route' => 'purchases',          'match' => 'purchases', 'permission' => 'purchases.view', 'primary' => false],
